@@ -1,0 +1,26 @@
+[project]
+name = "lalonde"
+version = "0.1.0"
+requires-python = ">=3.11.2,<3.12" # 3.11.15? that's what's installed, anyway
+dependencies = [
+    "kivy==2.3.1",
+    "pytodotxt==3.1.0",
+]
+
+[dependency-groups]
+dev = [
+    "buildozer==1.6.0",  # cross-compilation suite
+    "pip>=26.1.2",       # a prerequ for buildozer
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src/lalonde"]
+addopts = "--cov --cov-report=term-missing"
+
+[tool.coverage.run]
+source = ["src"]
+
+[tool.ruff]
+src = ["src/lalonde"]

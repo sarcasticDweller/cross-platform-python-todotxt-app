@@ -1,0 +1,34 @@
+<TaskWidget>:
+    size_hint_y: None
+    height: dp(40)
+    on_release: root.on_edit()
+
+    BoxLayout:
+        orientation: "horizontal"
+
+        Label:
+            id: description
+            text: str(root.task_data.description) if root.task_data else ""
+
+        CheckBox:
+            id: is_completed
+            size_hint: None, None
+            size: dp(48), dp(48)
+            active: root.task_data.is_completed if root.task_data else False
+
+<TaskList>:
+    orientation: "vertical"
+    BoxLayout:
+        orientation: "horizontal"
+        size_hint_y: None
+        height: dp(40)
+
+        Label:
+            text: "Tasks"
+
+    ScrollView:
+        BoxLayout:
+            id: tasks_container
+            orientation: "vertical"
+            size_hint_y: None
+            height: self.minimum_height

@@ -1,0 +1,97 @@
+<EditTaskScreen>:
+    name: "edit_task_screen"
+    task_manager: app.task_manager
+    BoxLayout:
+        orientation: "vertical"
+        ActionBar:
+            ActionView:
+                ActionPrevious:
+                    with_previous: True
+                    on_release: root.on_back()
+                ActionButton:
+                    text: "Delete"
+                    on_release: root.on_delete()
+                    disabled: root.mode == "create"
+                    opacity: 0 if root.mode == "create" else 1
+                ActionButton:
+                    text: "Save"
+                    on_release: root.on_save()
+        ScrollView:
+            GridLayout:
+                cols: 2
+                size_hint_y: None
+                height: self.minimum_height
+                row_default_height: dp(40)
+                row_force_default: True
+
+                Label:
+                    text: "description"
+                TextInput:
+                    id: description
+                    multiline: True
+                    text: root.description
+                    on_text: root.description = self.text
+
+                Label:
+                    text: "is_completed"
+                TextInput:
+                    id: is_completed
+                    multiline: False
+                    text: root.is_completed
+                    on_text: root.is_completed = self.text
+
+                Label:
+                    text: "priority"
+                TextInput:
+                    id: priority
+                    multiline: False
+                    text: root.priority
+                    on_text: root.priority = self.text
+
+                Label:
+                    text: "completion_date"
+                TextInput:
+                    id: completion_date
+                    multiline: False
+                    text: root.completion_date
+                    on_text: root.completion_date = self.text
+
+                Label:
+                    text: "creation_date"
+                TextInput:
+                    id: creation_date
+                    multiline: False
+                    text: root.creation_date
+                    on_text: root.completion_date = self.text
+
+                Label:
+                    text: "project_tags"
+                TextInput:
+                    id: project_tags
+                    multiline: False
+                    text: root.project_tags
+                    on_text: root.completion_date = self.text
+
+                Label:
+                    text: "context_tags"
+                TextInput:
+                    id: context_tags
+                    multiline: False
+                    text: root.context_tags
+                    on_text: root.context_tags = self.text
+
+                Label:
+                    text: "due"
+                TextInput:
+                    id: due
+                    multiline: False
+                    text: root.due
+                    on_text: root.due = self.text
+
+                Label:
+                    text: "rec"
+                TextInput:
+                    id: rec
+                    multiline: False
+                    text: root.rec
+                    on_text: root.rec = self.text

@@ -1,0 +1,13 @@
+{
+  "include": ["src", "tests"],
+  "typeCheckingMode": "off",
+  "venvPath": ".",
+  "venv": ".venv",
+  "executionEnvironments": [
+    {
+      "root": ".",
+      "pythonVersion": "3.11",
+      "extraPaths": ["src/lalonde"]
+    }
+  ]
+}
