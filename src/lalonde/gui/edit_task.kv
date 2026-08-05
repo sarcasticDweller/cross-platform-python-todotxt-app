@@ -1,3 +1,11 @@
+<DateField>:
+    orientation: "horizontal"
+    Label:
+        text: root.field_name
+    Button:
+        text: root.name_text if root.name_text else "(tap to set)"
+        on_release: root.screen.show_date_picker(root.field_name)
+
 <EditTaskScreen>:
     name: "edit_task_screen"
     task_manager: app.task_manager
@@ -17,12 +25,10 @@
                     text: "Save"
                     on_release: root.on_save()
         ScrollView:
-            GridLayout:
-                cols: 2
-                size_hint_y: None
+            BoxLayout:
+                orientation: "vertical"
+                #size_hint_y: None
                 height: self.minimum_height
-                row_default_height: dp(40)
-                row_force_default: True
 
                 Label:
                     text: "description"
@@ -40,29 +46,28 @@
                     text: root.is_completed
                     on_text: root.is_completed = self.text
 
-                Label:
-                    text: "priority"
-                TextInput:
-                    id: priority
-                    multiline: False
-                    text: root.priority
-                    on_text: root.priority = self.text
+                BoxLayout:
+                    orientation: "horizontal"
+                    Label:
+                        text: "priority"
+                    Spinner:
+                        id: priority
+                        text: root.priority if root.priority else ""
+                        values: [""] + [chr(c) for c in range (65, 91)] # drop to 70 if too long
+                        on_text: root.priority = self.text
+                    #TextInput:
+                    #    id: priority
+                    #    multiline: False
+                    #    text: root.priority
+                    #    on_text: root.priority = self.text
 
-                Label:
-                    text: "completion_date"
-                TextInput:
-                    id: completion_date
-                    multiline: False
-                    text: root.completion_date
-                    on_text: root.completion_date = self.text
+                DateField:
+                    field_name: "completion_date"
+                    screen: root
 
-                Label:
-                    text: "creation_date"
-                TextInput:
-                    id: creation_date
-                    multiline: False
-                    text: root.creation_date
-                    on_text: root.completion_date = self.text
+                DateField:
+                    field_name: "creation_date"
+                    screen: root
 
                 Label:
                     text: "project_tags"
@@ -70,7 +75,7 @@
                     id: project_tags
                     multiline: False
                     text: root.project_tags
-                    on_text: root.completion_date = self.text
+                    on_text: root.project_tags = self.text
 
                 Label:
                     text: "context_tags"
@@ -80,13 +85,9 @@
                     text: root.context_tags
                     on_text: root.context_tags = self.text
 
-                Label:
-                    text: "due"
-                TextInput:
-                    id: due
-                    multiline: False
-                    text: root.due
-                    on_text: root.due = self.text
+                DateField:
+                    field_name: "due"
+                    screen: root
 
                 Label:
                     text: "rec"

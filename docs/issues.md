@@ -6,13 +6,13 @@ Each entry keeps a stable ID so it can be referenced/updated across reviews. Don
 
 ## Open
 
-### ISSUE-027: `TaskWidget.on_completed()` always stamps `completion_date`, even when un-completing a task — and `create_task()` has no guard stopping `completion_date` from being set without `is_completed=True` or without a `creation_date`, so the value is silently swallowed on save
+### ISSUE-028: `EditTaskScreen` reads/writes `project_tags`/`context_tags` as plain strings, but `TaskData` types them as `list[str]` — editing a task with existing tags shows them as blank, and saving free-typed tag text corrupts each tag into one-character-per-letter tags
 - **Status:** open
 - **Kind:** bug
-- **Location:** `src/lalonde/gui/tasks_view.py`, `TaskWidget.on_completed()` (`self.task.completion_date = datetime.date.today()` runs unconditionally after toggling `is_completed` either direction); `src/lalonde/tasks_api/task.py`'s `create_task()` (no guard rejects `completion_date` when `is_completed` is `False` or when `creation_date` is `None`)
-- **Noted:** 2026-08-01
-- **Details:** `on_completed()` flips `self.task.is_completed` and then sets `completion_date` to today regardless of the new value — so un-completing a task also stamps a `completion_date`. Separately, `create_task()` has no validation tying `completion_date` to `is_completed`/`creation_date` — and per ISSUE-021/ISSUE-022 (resolved as won't-fix: `create_task()` is intentionally lossy), that won't change — so neither combination ever raises; the value is just dropped at serialization time. Confirmed by direct repro: `create_task(description="foo", is_completed=True, completion_date=datetime.date(2026, 8, 1))` (no `creation_date`, the realistic shape for completing a task that was never stamped with a creation date) serializes to `'x foo'` — `completion_date` silently vanishes even though `is_completed=True` persists correctly. This is reachable from normal use: checking off any task that lacks a `creation_date` (common for todo.txt lines not created through this app) loses its completion date with no error.
-- **Direction (not prescriptive):** since `create_task()` won't gain guards for this, the fix has to live in `on_completed()` — only set `completion_date` when the task is newly completed (not on every toggle), and account for the case where the task has no `creation_date` to begin with.
+- **Location:** `src/lalonde/gui/edit_task.py`, `EditTaskScreen._set_fields()` (line 62-63: `safe_string(task_data.project_tags)`/`safe_string(task_data.context_tags)`) and `EditTaskScreen.on_save()` (line 81-82: `project_tags=self.ids.project_tags.text`, `context_tags=self.ids.context_tags.text`)
+- **Noted:** 2026-08-02
+- **Details:** `TaskData.project_tags`/`context_tags` (`src/lalonde/tasks_api/task.py`) are `list[str]`. Two separate breaks from that contract: (1) `_set_fields()` passes the list straight into `safe_string()`, whose `isinstance(arg, str)` check fails for a list and returns `""` — confirmed by direct repro: `safe_string(TaskData(description="foo", project_tags=["home","errand"]).project_tags)` returns `''`, so opening the edit screen for any task that already has project/context tags shows those fields empty. (2) `on_save()` builds the new `TaskData` with `project_tags=self.ids.project_tags.text` — a raw string, not a list — which flows into `create_task()`'s `for tag in project_tags:` loop and iterates the string character-by-character. Confirmed by direct repro: `create_task(description="foo", project_tags="+home")` serializes to `'foo ++ +h +o +m +e'` (`t.projects == ['+', 'h', 'o', 'm', 'e']`) instead of a single `+home` tag. Reachable in normal use any time a project/context tag is entered on the create-or-edit form.
+- **Direction (not prescriptive):** decide on a text-entry convention for a list-typed field (e.g. space- or comma-separated) and convert explicitly in both directions — join the list into text in `_set_fields()`, split the text back into a list in `on_save()` — instead of passing the raw type through `safe_string()`/straight into `TaskData`.
 
 ### ISSUE-024: `scripts/compile_android.sh` fails to compile on GitHub Codespaces, cause not yet diagnosed
 - **Status:** open
@@ -23,6 +23,18 @@ Each entry keeps a stable ID so it can be referenced/updated across reviews. Don
 - **Direction (not prescriptive):** capture the actual failure output from a Codespace run and add it here before investigating further.
 
 ## Resolved
+
+### ISSUE-029: `edit_task.kv`'s `on_text` handlers for the `creation_date` and `project_tags` `TextInput`s both write to `root.completion_date` instead of their own field, so typing in either box overwrites the completion_date box's text live
+- **Status:** resolved
+- **Resolved:** 2026-08-02
+- **Kind:** bug
+- **Note:** Both copy-pasted lines in `src/lalonde/gui/edit_task.kv` now reference their own field — line 65 reads `on_text: root.creation_date = self.text` and line 73 reads `on_text: root.project_tags = self.text` — matching the `text: root.<field>` / `on_text: root.<field> = self.text` pattern used by every other field in the form. Confirmed by re-reading the file: all nine `on_text` lines now each reference a distinct root property with no duplicates.
+
+### ISSUE-027: `TaskWidget.on_completed()` always stamps `completion_date`, even when un-completing a task — and `create_task()` has no guard stopping `completion_date` from being set without `is_completed=True` or without a `creation_date`, so the value is silently swallowed on save
+- **Status:** resolved
+- **Resolved:** 2026-08-02
+- **Kind:** bug
+- **Note:** `on_completed()` in `src/lalonde/gui/tasks_view.py` now reads `if value and self.task_data.creation_date: self.task_data.completion_date = today()` — it no longer stamps `completion_date` on un-completing (the `if value` guard), and no longer attempts to set it when there's no `creation_date` to pair it with (the `and self.task_data.creation_date` guard), matching the "Direction" this issue suggested. Confirmed by direct repro: simulating `on_completed(value=True)` against a `TaskData` with no `creation_date` now serializes to `'x foo'` with no dropped/attempted `completion_date`; simulating `on_completed(value=False)` against a previously-completed task with both dates set leaves `completion_date` unset in the serialized output (`pytodotxt` only emits it when `is_completed` is `True`), so nothing stale leaks through either.
 
 ### ISSUE-019: `create_task`'s `due` param is `datetime.date`-only (now enforced with a `TypeError` guard), but the GUI's only call site still passes a plain string, so saving a task with a due date still crashes
 - **Status:** resolved

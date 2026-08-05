@@ -1,12 +1,12 @@
 from pathlib import Path
 
-from kivy.app import App
 from kivy.lang import Builder
 from kivy.properties import ObjectProperty
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.utils import platform
+from kivymd.app import MDApp
 
 from gui.edit_task import EditTaskScreen
 from gui.tasks_view import TaskList  #noqa: F401 - Kivy needs this to be imported
@@ -33,10 +33,11 @@ class MainScreen(Screen):
 class FallbackScreen(Screen):
     pass
 
-class LalondeApp(App):
+class LalondeApp(MDApp):
     task_manager = ObjectProperty(None)
 
     def build(self):
+        self.theme_cls.theme_style = "Dark" # its 2026, dark mode is "in". but seriously, light mode should come soon. this just works as a stop-gap to make text visible again as this app switches to a MDApp
         manager = ScreenManager()
         manager.add_widget(MainScreen())
         manager.add_widget(EditTaskScreen())

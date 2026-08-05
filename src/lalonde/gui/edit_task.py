@@ -1,14 +1,19 @@
 import copy
+import datetime
 from pathlib import Path
 
 from kivy.lang import Builder
 from kivy.properties import ObjectProperty, OptionProperty, StringProperty
+from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.screenmanager import Screen
+from kivymd.uix.pickers import MDDatePicker
 
 from datetime_helper.datetime_helper import date_to_str, str_to_date
 from tasks_api.task import TaskData, data_to_task
 
 Builder.load_file(str(Path(__file__).with_name("edit_task.kv")))
+
+
 
 
 def safe_string(arg: any) -> str:
@@ -23,7 +28,7 @@ class EditTaskScreen(Screen):
 
     mode = OptionProperty("create", options=["create", "edit"])
 
-    # Fields
+    # Form Fields
     description = StringProperty("")
     is_completed = StringProperty("")    # its a boolean, but we enter it as text for now
     priority = StringProperty("")
@@ -34,6 +39,14 @@ class EditTaskScreen(Screen):
     due = StringProperty("")             # its a date, ...
     rec = StringProperty("")
 
+    def on_pre_enter(self) -> None:
+        self.clear()
+
+        if self.mode == "create":
+            return
+
+        self._set_fields(self.task_data)
+
     def open_in_mode(self, mode: str, task_data: TaskData | None = None) -> None:
         self.mode = mode
         if task_data == None:
@@ -41,14 +54,15 @@ class EditTaskScreen(Screen):
         self.task_data = task_data
         self.manager.current = self.name
 
-    def on_pre_enter(self) -> None:
-        self.clear()
+    def show_date_picker(self, field_name: str) -> None:
+        picker = MDDatePicker()
+        picker.bind(
+            on_save=lambda instance, value, date_range: self._on_date_picked(field_name, value),
+        )
+        picker.open()
 
-        if self.mode == "create":
-            return
-
-        # else: edit mode setup
-        self._set_fields(self.task_data)
+    def _on_date_picked(self, field_name: str, value: datetime.date) -> None:
+        setattr(self, field_name, date_to_str(value))
 
     def _set_fields(self, task_data: TaskData | None = None) -> None:
         if task_data == None:
@@ -65,29 +79,30 @@ class EditTaskScreen(Screen):
         self.rec = safe_string(task_data.rec)
 
     def on_save(self) -> None:
-        description = self.ids.description.text
+        description = self.description
         if description == "":
             return
-
-        is_completed = self.ids.is_completed.text == "True" # placeholder logic; this whole system will need heavy changes as it moves towards more idiomatic data entry
 
         old_task_data = copy.deepcopy(self.task_data)
         self.task_data = TaskData(
             description=description,
-            is_completed=is_completed,
-            priority=self.ids.priority.text ,
-            completion_date=str_to_date(self.ids.completion_date.text),
-            creation_date=str_to_date(self.ids.creation_date.text),
-            project_tags=self.ids.project_tags.text,
-            context_tags=self.ids.context_tags.text,
-            due=str_to_date(self.ids.due.text),
-            rec=self.ids.rec.text
+            is_completed=self.is_completed,
+            priority=self.priority,
+            completion_date=str_to_date(self.completion_date),
+            creation_date=str_to_date(self.creation_date),
+            project_tags=self.project_tags.split(" "),
+            context_tags=self.context_tags.split(" "),
+            due=str_to_date(self.due),
+            rec=self.rec
         )
 
         if self.mode == "create":
             self.task_manager.add_task(data_to_task(self.task_data))
         if self.mode == "edit":
-            self.task_manager.update_task(data_to_task(old_task_data), data_to_task(self.task_data))
+            self.task_manager.update_task(
+                old_task=data_to_task(old_task_data),
+                new_task=data_to_task(self.task_data)
+            )
         self.clear()
         self.on_back()
 
@@ -100,3 +115,19 @@ class EditTaskScreen(Screen):
 
     def clear(self) -> None:
         self._set_fields()
+
+class DateField(BoxLayout):
+    field_name = StringProperty("")
+    screen = ObjectProperty(None)
+    name_text = StringProperty("")
+
+    def on_screen(self, *args) -> None:
+        self._connect()
+
+    def on_field_name(self, *args) -> None:
+        self._connect()
+
+    def _connect(self):
+        if self.screen and self.field_name:
+            self.screen.bind(**{self.field_name: self.setter("name_text")})
+            self.name_text = getattr(self.screen, self.field_name)

@@ -86,6 +86,7 @@ Thumbs.db
 *.tmp
 *.temp
 tmp_*
+tmp/
 ~$*
 
 # Buildozer (Android/iOS build cache and output)

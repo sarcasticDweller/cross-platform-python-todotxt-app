@@ -4,6 +4,7 @@ version = "0.1.0"
 requires-python = ">=3.11.2,<3.12" # 3.11.15? that's what's installed, anyway
 dependencies = [
     "kivy==2.3.1",
+    "kivymd==1.0.2",
     "pytodotxt==3.1.0",
 ]
 
