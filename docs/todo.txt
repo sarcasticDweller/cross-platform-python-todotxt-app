@@ -1,0 +1,2 @@
+`edit_task.py` - Store dates as datetimes all the way to task creation instead of using `StringProperty`
+`edit_task.py` - Move away from using screens in favor of composable widgets. Good for making assets travel between platforms.

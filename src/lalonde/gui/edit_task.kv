@@ -40,11 +40,11 @@
 
                 Label:
                     text: "is_completed"
-                TextInput:
+                CheckBox:
                     id: is_completed
-                    multiline: False
-                    text: root.is_completed
-                    on_text: root.is_completed = self.text
+                    size: dp(48), dp(48)
+                    active: root.is_completed
+                    on_active: root.is_completed = self.active
 
                 BoxLayout:
                     orientation: "horizontal"
@@ -55,11 +55,6 @@
                         text: root.priority if root.priority else ""
                         values: [""] + [chr(c) for c in range (65, 91)] # drop to 70 if too long
                         on_text: root.priority = self.text
-                    #TextInput:
-                    #    id: priority
-                    #    multiline: False
-                    #    text: root.priority
-                    #    on_text: root.priority = self.text
 
                 DateField:
                     field_name: "completion_date"

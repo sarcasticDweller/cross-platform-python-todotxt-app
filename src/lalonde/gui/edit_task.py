@@ -3,7 +3,12 @@ import datetime
 from pathlib import Path
 
 from kivy.lang import Builder
-from kivy.properties import ObjectProperty, OptionProperty, StringProperty
+from kivy.properties import (
+    BooleanProperty,
+    ObjectProperty,
+    OptionProperty,
+    StringProperty,
+)
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.screenmanager import Screen
 from kivymd.uix.pickers import MDDatePicker
@@ -30,7 +35,7 @@ class EditTaskScreen(Screen):
 
     # Form Fields
     description = StringProperty("")
-    is_completed = StringProperty("")    # its a boolean, but we enter it as text for now
+    is_completed = BooleanProperty(False)
     priority = StringProperty("")
     completion_date = StringProperty("") # its a date, but we enter it as text for now
     creation_date = StringProperty("")   # its a date, ...
@@ -68,8 +73,8 @@ class EditTaskScreen(Screen):
         if task_data == None:
             task_data = TaskData(description="")
 
-        self.description= task_data.description # because a description is a requirement for all tasks, it does not need `safe_string()` insurance
-        self.is_completed= safe_string(str(task_data.is_completed))
+        self.description = task_data.description # because a description is a requirement for all tasks, it does not need `safe_string()` insurance
+        self.is_completed = task_data.is_completed
         self.priority = safe_string(task_data.priority)
         self.completion_date = date_to_str(task_data.completion_date)
         self.creation_date = date_to_str(task_data.creation_date)
