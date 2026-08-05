@@ -141,7 +141,7 @@ fullscreen = 0
 # agreements. This is intended for automation only. If set to False,
 # the default, you will be shown the license when first running
 # buildozer.
-# android.accept_sdk_license = False
+android.accept_sdk_license = True
 
 # (str) Android entry point, default is ok for Kivy-based app
 #android.entrypoint = org.kivy.android.PythonActivity
@@ -291,7 +291,13 @@ fullscreen = 0
 
 # (list) The Android archs to build for, choices: armeabi-v7a, arm64-v8a, x86, x86_64
 # In past, was `android.arch` as we weren't supporting builds for multiple archs at the same time.
-android.archs = arm64-v8a, armeabi-v7a
+#
+# arm64-v8a only: python-for-android's build for a second arch reuses its
+# first arch's scratch venv without clearing it, which corrupts that venv's
+# pip install and crashes the build (see the arm64-v8a_armeabi-v7a build log
+# for the ImportError this throws). Dropping armeabi-v7a (32-bit ARM, legacy
+# hardware Google Play hasn't required since 2019) sidesteps it entirely.
+android.archs = arm64-v8a
 
 # (int) overrides automatic versionCode computation (used in build.gradle)
 # this is not the same as app version and should only be edited if you know what you're doing

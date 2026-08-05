@@ -6,7 +6,19 @@ Each entry keeps a stable ID so it can be referenced/updated across reviews. Don
 
 ## Open
 
+<<<<<<< HEAD
 ### ISSUE-030: Any `MDFloatingActionButton` embedded via `MDBottomAppBar`/`MDTopAppBar(type="bottom")` crashes the app on startup with `ValueError: x1 must be greater than or equal to x0`
+=======
+### ISSUE-028: Building for more than one Android arch in `buildozer.spec`'s `android.archs` reliably breaks the build — python-for-android reuses one shared scratch venv across archs without clearing it, corrupting pip on the second arch
+- **Status:** open
+- **Kind:** bug (upstream, in python-for-android — not fixable from this repo)
+- **Location:** `buildozer.spec`'s `android.archs` setting; root cause is `pythonforandroid/build.py`'s `run_pymodules_install()` (`shprint(host_python, '-m', 'venv', 'venv')` at the top of the function, no `--clear`, path not arch-qualified)
+- **Noted:** 2026-08-05
+- **Details:** With `android.archs = arm64-v8a, armeabi-v7a`, `compile_android.sh` compiles Kivy/SDL2/pyjnius from source successfully for *both* archs, then crashes in the final pure-Python-deps install stage for the second arch with `ImportError: cannot import name 'BuildDependencyInstallError' from 'pip._internal.exceptions'`. Root cause, confirmed by reading the checked-out p4a source (`.buildozer/android/platform/python-for-android`, tracking unpinned `master`/`release-2026.05.09`) and its `git log -p` history: `run_pymodules_install()` runs `python -m venv venv` in `ctx.build_dir`, a path shared across all archs in a single build (not arch-qualified), with no `--clear`. For the first arch this creates the venv fresh and `pip install -U pip` cleanly upgrades pip (seen: 25.3 → 26.2, whatever's newest on PyPI at build time — pip itself isn't pinned anywhere in this repo or by p4a). For the second arch, rerunning `python -m venv venv` on the already-upgraded venv re-invokes `ensurepip`, which reseeds its bundled (older) pip's files into site-packages without cleanly removing files/bytecode that only exist in the newer version — leaving a self-inconsistent pip install that crashes on next invocation. This venv-reuse code itself is old (essentially unchanged since 2020/2021), so it's not a recent p4a regression; the trigger is timing-dependent on whatever pip version happens to resolve as "latest" on PyPI when `pip install -U pip` runs, which is why this may not reproduce identically on every machine/every day.
+- **Direction (not prescriptive):** can't be fixed by editing p4a directly (it's downloaded fresh into `.buildozer/`, untracked, not part of this repo). Current workaround, applied on branch `drop-armeabi-v7a-support`: dropped `android.archs` to `arm64-v8a` only, sidestepping the bug since there's only one arch stage. A fix that keeps 32-bit (`armeabi-v7a`) support would need something like a Buildozer `p4a.hook` that force-clears `ctx.build_dir`'s shared `venv` directory before each arch's pymodules-install stage.
+
+### ISSUE-027: `TaskWidget.on_completed()` always stamps `completion_date`, even when un-completing a task — and `create_task()` has no guard stopping `completion_date` from being set without `is_completed=True` or without a `creation_date`, so the value is silently swallowed on save
+>>>>>>> f680548 (Drop armeabi-v7a support and fixed compilation-time pathing errors on)
 - **Status:** open
 - **Kind:** bug
 - **Location:** `src/lalonde/gui/main_screen.kv` (the `MDBottomAppBar` block added on top of `on_create_task()`); root cause is upstream in the pinned `kivymd==1.0.2` package, not this repo's code — `.venv/lib/python3.11/site-packages/kivymd/uix/behaviors/elevation.py:1222` (`RoundedRectangularElevationBehavior.__draw_shadow__`'s `context.rectangle(...)` call) and `kivymd/uix/toolbar/toolbar.py:1295` (`MDTopAppBar.update_floating_radius`)
