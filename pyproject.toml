@@ -25,3 +25,8 @@ source = ["src"]
 
 [tool.ruff]
 src = ["src/lalonde"]
+
+[tool.uv]
+constraint-dependencies = [
+    "pillow==9.5.0"
+]

@@ -18,9 +18,6 @@ from tasks_api.task import TaskData, data_to_task
 
 Builder.load_file(str(Path(__file__).with_name("edit_task.kv")))
 
-
-
-
 def safe_string(arg: any) -> str:
     """Returns "" if the arg is not a string, otherwise returns the arg"""
     if isinstance(arg, str):

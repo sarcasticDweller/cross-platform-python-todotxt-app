@@ -1,18 +1,17 @@
 <MainScreen>:
     name: "main_screen"
     task_manager: app.task_manager
-    BoxLayout:
-        orientation: "vertical"
-
-        ActionBar:
-            ActionView:
-                ActionPrevious:
-                    title: "Lalonde"
-                    with_previous: False
-                ActionButton:
-                    text: "Create task"
-                    on_release: root.on_create_task()
-
+    FloatLayout:
         TaskList:
             id: task_list
             task_manager: app.task_manager
+            size_hint: 1, 1
+
+        MDBottomAppBar:
+            MDTopAppBar:
+                title: "Lalonde"
+                type: "bottom"
+                icon: "plus"
+                mode: "free-end"
+                on_kv_post: self.action_button.elevation = 0
+                on_action_button: root.on_create_task()

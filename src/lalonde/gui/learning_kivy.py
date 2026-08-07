@@ -38,6 +38,8 @@ class LalondeApp(MDApp):
 
     def build(self):
         self.theme_cls.theme_style = "Dark" # its 2026, dark mode is "in". but seriously, light mode should come soon. this just works as a stop-gap to make text visible again as this app switches to a MDApp
+        self.theme_cls.material_style = "M3"
+
         manager = ScreenManager()
         manager.add_widget(MainScreen())
         manager.add_widget(EditTaskScreen())

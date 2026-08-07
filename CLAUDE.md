@@ -37,6 +37,16 @@ Building the Android APK:
 JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64 uv run buildozer android debug   # or scripts/compile_android.sh
 ```
 
+## Dependency pinning
+
+Every dependency in `pyproject.toml` — both the main `dependencies` list and `[dependency-groups] dev` — must be pinned to an exact version (`==`), never a floating range (`>=`, `^`, or unset). If you notice a dependency that isn't exactly pinned (including a transitive one that shows up unpinned in `uv.lock`), flag it to the user rather than leaving it unremarked or silently pinning it yourself.
+
+**Why:** an unpinned transitive Pillow dependency (pulled in by kivy/kivymd, resolved to whatever `uv sync` picks as latest) silently broke KivyMD 1.0.2's shadow-drawing code — Pillow 12.3.0's `ImageDraw.rectangle` started raising on degenerate rectangles that `kivymd/uix/behaviors/elevation.py` produces for any perfectly circular elevated widget (e.g. the default `MDFloatingActionButton`), crashing the app with `ValueError: x1 must be greater than or equal to x0` on startup. Nothing in this repo changed; only the resolved Pillow version did. `kivymd==1.0.2` itself is pinned for an analogous reason — newer KivyMD releases have a packaging bug that breaks the Android build.
+
+**Known unpinned as of 2026-08-05 (needs a follow-up pin):**
+- `pillow` — not a direct dependency, resolves transitively and floats; confirmed broken at 12.3.0, confirmed working at 9.5.0 (exact break point between the two not yet bisected).
+- dev group: `pip>=26.1.2`, `pytest>=8.0`, `pytest-cov>=5.0` — floating ranges rather than exact pins.
+
 ## Architecture
 
 **Import roots.** `pyproject.toml` sets `pythonpath = ["src/lalonde"]`, so all internal imports are rooted *inside* `lalonde`, not at the package itself — e.g. `from tasks_api.task import create_task`, never `from lalonde.tasks_api...`. `buildozer.spec` sets `source.dir = src/lalonde` for the same reason: Buildozer only bundles what's under that directory, so any module living outside `src/lalonde` won't ship to Android (this bit the project once — see the buildozer note in `docs/Notes/buildozer.md`).
