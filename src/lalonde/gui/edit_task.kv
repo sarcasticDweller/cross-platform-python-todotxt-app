@@ -2,9 +2,18 @@
     orientation: "horizontal"
     Label:
         text: root.field_name
-    MDFlatButton:
+    MDRaisedButton:
         text: root.name_text if root.name_text else "(tap to set)"
         on_release: root.screen.show_date_picker(root.field_name)
+
+<DescriptionField>:
+    orientation: "horizontal"
+    MDLabel:
+        text: "Description"
+    MDTextField:
+        hint_text: "Description"
+
+
 
 <EditTaskScreen>:
     name: "edit_task_screen"
@@ -12,80 +21,13 @@
     BoxLayout:
         orientation: "vertical"
         MDTopAppBar:
-            title: "Edit" if self.mode == "edit" else "Create"
+            title: "Edit Task" if root.mode == "edit" else "Create Task"
             pos_hint: {"top": 1}
             on_kv_post: self.action_button.elevation = 0
             left_action_items: [["arrow-left", lambda x: root.on_back()]]
             right_action_items: [["delete-forever", lambda x: root.on_delete()], ["content-save", lambda x: root.on_save()]]
 
-        ScrollView:
-            BoxLayout:
-                orientation: "vertical"
-                #size_hint_y: None
-                height: self.minimum_height
-
-                Label:
-                    text: "description"
-                TextInput:
-                    id: description
-                    multiline: True
-                    text: root.description
-                    on_text: root.description = self.text
-
-                Label:
-                    text: "is_completed"
-                CheckBox:
-                    id: is_completed
-                    size: dp(48), dp(48)
-                    active: root.is_completed
-                    on_active: root.is_completed = self.active
-
+        MDScrollView:
+            MDList:
                 BoxLayout:
-                    orientation: "horizontal"
-                    Label:
-                        text: "priority"
-                    Spinner:
-                        id: priority
-                        text: root.priority if root.priority else ""
-                        values: [""] + [chr(c) for c in range (65, 91)] # drop to 70 if too long
-                        on_text: root.priority = self.text
-
-                DateField:
-                    field_name: "completion_date"
-                    screen: root
-
-                DateField:
-                    field_name: "creation_date"
-                    screen: root
-
-                Label:
-                    text: "project_tags"
-                TextInput:
-                    id: project_tags
-                    multiline: False
-                    text: root.project_tags
-                    on_text: root.project_tags = self.text
-
-                Label:
-                    text: "context_tags"
-                TextInput:
-                    id: context_tags
-                    multiline: False
-                    text: root.context_tags
-                    on_text: root.context_tags = self.text
-
-                DateField:
-                    field_name: "due"
-                    screen: root
-
-                Label:
-                    text: "rec"
-                TextInput:
-                    id: rec
-                    multiline: False
-                    text: root.rec
-                    on_text: root.rec = self.text
-
-                MDRaisedButton:
-                    text: "Save"
-                    on_release: root.on_save()
+                    id: edit_task_options_container

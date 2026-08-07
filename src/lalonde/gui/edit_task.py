@@ -24,6 +24,24 @@ def safe_string(arg: any) -> str:
         return arg
     return ""
 
+class DateField(BoxLayout):
+    field_name = StringProperty("")
+    screen = ObjectProperty(None)
+    name_text = StringProperty("")
+
+    def on_screen(self, *args) -> None:
+        self._connect()
+
+    def on_field_name(self, *args) -> None:
+        self._connect()
+
+    def _connect(self):
+        if self.screen and self.field_name:
+            self.screen.bind(**{self.field_name: self.setter("name_text")})
+            self.name_text = getattr(self.screen, self.field_name)
+
+class DescriptionField(BoxLayout): pass
+
 class EditTaskScreen(Screen):
     task_manager = ObjectProperty(None)
     task_data = ObjectProperty(None)
@@ -41,20 +59,26 @@ class EditTaskScreen(Screen):
     due = StringProperty("")             # its a date, ...
     rec = StringProperty("")
 
+    # TODO: Trace these method calls and create some factory functions to generate appropriate screens based on set data.
+    # It should follow a rule of minimalism:
+        # If you don't have a due date, you probably don't need to set recurrance.
+        # If it's a new task, it's safe to say the creation date is the current date.
+    # And so on. All properties should be accessible.
+
     def on_pre_enter(self) -> None:
         self.clear()
-
         if self.mode == "create":
             return
-
         self._set_fields(self.task_data)
 
     def open_in_mode(self, mode: str, task_data: TaskData | None = None) -> None:
         self.mode = mode
-        if task_data == None:
-            task_data = TaskData(description="")
-        self.task_data = task_data
-        self.manager.current = self.name
+        if mode == "create":
+            self._create_mode()
+        elif mode == "edit":
+            self._edit_mode(task_data)
+        else: # this should never fire due to the nature of OptionProperty
+            raise ValueError(f"{type(self).__name__} must recieve mode 'edit' or 'create', got: '{mode}'")
 
     def show_date_picker(self, field_name: str) -> None:
         picker = MDDatePicker()
@@ -62,6 +86,17 @@ class EditTaskScreen(Screen):
             on_save=lambda instance, value, date_range: self._on_date_picked(field_name, value),
         )
         picker.open()
+
+    def _create_mode(self):
+        self.task_data = TaskData(description="")
+        self.manager.current = self.name
+        container = self.ids.edit_task_options_container # antipattern, how are you actually supposed to query props?
+        container.clear_widgets()
+        container.add_widget(DescriptionField())
+
+    def _edit_mode(self, task_data: TaskData):
+        self.task_data = task_data
+        self.manager.current = self.name
 
     def _on_date_picked(self, field_name: str, value: datetime.date) -> None:
         setattr(self, field_name, date_to_str(value))
@@ -119,19 +154,3 @@ class EditTaskScreen(Screen):
 
     def clear(self) -> None:
         self._set_fields()
-
-class DateField(BoxLayout):
-    field_name = StringProperty("")
-    screen = ObjectProperty(None)
-    name_text = StringProperty("")
-
-    def on_screen(self, *args) -> None:
-        self._connect()
-
-    def on_field_name(self, *args) -> None:
-        self._connect()
-
-    def _connect(self):
-        if self.screen and self.field_name:
-            self.screen.bind(**{self.field_name: self.setter("name_text")})
-            self.name_text = getattr(self.screen, self.field_name)

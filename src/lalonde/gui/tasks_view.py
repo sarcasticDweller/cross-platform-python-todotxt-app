@@ -41,7 +41,7 @@ class TaskList(BoxLayout):
     task_manager = ObjectProperty(None)
 
     def refresh(self) -> None:
-        container = self.ids.tasks_container
+        container = self.ids.tasks_container # antipattern, how are you actually supposed to query props?
         container.clear_widgets()
         for task in self.task_manager:
             container.add_widget(TaskWidget(
