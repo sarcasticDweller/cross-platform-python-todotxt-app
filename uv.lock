@@ -2,9 +2,6 @@ version = 1
 revision = 3
 requires-python = ">=3.11.2, <3.12"
 
-[manifest]
-constraints = [{ name = "pillow", specifier = "==9.5.0" }]
-
 [[package]]
 name = "buildozer"
 version = "1.6.0"
@@ -218,6 +215,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "buildozer" },
+    { name = "pillow" },
     { name = "pip" },
     { name = "pytest" },
     { name = "pytest-cov" },
@@ -233,6 +231,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "buildozer", specifier = "==1.6.0" },
+    { name = "pillow", specifier = "==9.5.0" },
     { name = "pip", specifier = ">=26.1.2" },
     { name = "pytest", specifier = ">=8.0" },
     { name = "pytest-cov", specifier = ">=5.0" },

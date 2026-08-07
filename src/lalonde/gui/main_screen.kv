@@ -1,17 +1,23 @@
 <MainScreen>:
     name: "main_screen"
     task_manager: app.task_manager
-    FloatLayout:
+    BoxLayout:
+        orientation: "vertical"
+        MDTopAppBar:
+            title: "Lalonde"
+            pos_hint: {"top": 1}
+            on_kv_post: self.action_button.elevation = 0
+
         TaskList:
             id: task_list
             task_manager: app.task_manager
             size_hint: 1, 1
 
-        MDBottomAppBar:
-            MDTopAppBar:
-                title: "Lalonde"
-                type: "bottom"
-                icon: "plus"
-                mode: "free-end"
-                on_kv_post: self.action_button.elevation = 0
-                on_action_button: root.on_create_task()
+    FloatLayout:
+
+
+        MDFloatingActionButton:
+            icon: "pencil"
+            on_kv_post: self.elevation = 0
+            pos_hint: {"right": 0.95, "y": 0.05}
+            on_release: root.on_create_task()

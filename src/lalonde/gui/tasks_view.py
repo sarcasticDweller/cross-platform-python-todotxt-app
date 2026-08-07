@@ -1,23 +1,25 @@
 from pathlib import Path
 
 from kivy.app import App
+from kivy.factory import Factory
 from kivy.lang import Builder
 from kivy.properties import BooleanProperty, ObjectProperty, StringProperty
-from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.boxlayout import BoxLayout
+from kivymd.uix.list import OneLineIconListItem
 
 from datetime_helper.datetime_helper import today
 from tasks_api.task import data_to_task, task_to_data
 
 Builder.load_file(str(Path(__file__).with_name("tasks_view.kv")))
+Factory.register("CheckboxLeftWidget", module="kivymd.uix.list")
 
-class TaskWidget(ButtonBehavior, BoxLayout):
+class TaskWidget(OneLineIconListItem):
     # This class might want to expose some data that can be used to filter and sort it.
 
-    description = StringProperty("")
-    is_completed = BooleanProperty(False)
-    task_manager = ObjectProperty(None) # TaskManager
-    task_data = ObjectProperty(None)    # TaskData
+    description = StringProperty("")      # display this
+    is_completed = BooleanProperty(False) # display this
+    task_manager = ObjectProperty(None)   # TaskManager
+    task_data = ObjectProperty(None)      # TaskData
 
     def on_kv_post(self, base_widget):
         self.ids.is_completed.bind(active=self.on_completed)

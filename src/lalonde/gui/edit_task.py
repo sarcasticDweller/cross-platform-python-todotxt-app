@@ -112,6 +112,8 @@ class EditTaskScreen(Screen):
         self.manager.current = "main_screen"
 
     def on_delete(self) -> None:
+        if self.mode == "create" and self.description == "":
+            return
         del self.task_manager[self.task_manager.find_task(data_to_task(self.task_data))]
         self.on_back()
 
