@@ -40,9 +40,21 @@ class DateField(BoxLayout):
             self.screen.bind(**{self.field_name: self.setter("name_text")})
             self.name_text = getattr(self.screen, self.field_name)
 
-class DescriptionField(BoxLayout): pass
+class DescriptionField(BoxLayout):
+    screen = ObjectProperty(None)
+
+    def on_kv_post(self, base_widget):
+        self.ids.description_input.bind(
+            text=self.on_description_changed
+        )
+
+    def on_description_changed(self, instance, value):
+        self.screen.description = value
 
 class EditTaskScreen(Screen):
+    """Warning!
+    I originally intended to unify the "edit" and "create" screens, but the more I write the more "if mode == ..." clauses I have to make. This is a candidate for splitting into two different classes.
+    """
     task_manager = ObjectProperty(None)
     task_data = ObjectProperty(None)
 
@@ -80,23 +92,23 @@ class EditTaskScreen(Screen):
         else: # this should never fire due to the nature of OptionProperty
             raise ValueError(f"{type(self).__name__} must recieve mode 'edit' or 'create', got: '{mode}'")
 
+    def _create_mode(self):
+        self.task_data = TaskData(description="")
+        self.manager.current = self.name
+        container = self.ids.edit_task_options_container # antipattern, how are you actually supposed to query props?
+        container.clear_widgets()
+        container.add_widget(DescriptionField(screen=self))
+
+    def _edit_mode(self, task_data: TaskData):
+        self.task_data = task_data
+        self.manager.current = self.name
+
     def show_date_picker(self, field_name: str) -> None:
         picker = MDDatePicker()
         picker.bind(
             on_save=lambda instance, value, date_range: self._on_date_picked(field_name, value),
         )
         picker.open()
-
-    def _create_mode(self):
-        self.task_data = TaskData(description="")
-        self.manager.current = self.name
-        container = self.ids.edit_task_options_container # antipattern, how are you actually supposed to query props?
-        container.clear_widgets()
-        container.add_widget(DescriptionField())
-
-    def _edit_mode(self, task_data: TaskData):
-        self.task_data = task_data
-        self.manager.current = self.name
 
     def _on_date_picked(self, field_name: str, value: datetime.date) -> None:
         setattr(self, field_name, date_to_str(value))
@@ -119,6 +131,9 @@ class EditTaskScreen(Screen):
         description = self.description
         if description == "":
             return
+
+        if self.mode == "edit" and not self.completion_date:
+            self.completion_date = datetime.datetime.today()
 
         old_task_data = copy.deepcopy(self.task_data)
         self.task_data = TaskData(

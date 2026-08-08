@@ -8,12 +8,12 @@
 
 <DescriptionField>:
     orientation: "horizontal"
-    MDLabel:
-        text: "Description"
     MDTextField:
+        id: description_input
         hint_text: "Description"
-
-
+        helper_text: "Describe the task"
+        multiline: True
+        mode: "rectangle"
 
 <EditTaskScreen>:
     name: "edit_task_screen"
@@ -29,5 +29,4 @@
 
         MDScrollView:
             MDList:
-                BoxLayout:
-                    id: edit_task_options_container
+                id: edit_task_options_container
