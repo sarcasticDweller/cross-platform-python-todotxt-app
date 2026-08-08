@@ -1,13 +1,11 @@
 <DateField>:
-    orientation: "horizontal"
-    Label:
-        text: root.field_name
-    MDRaisedButton:
-        text: root.name_text if root.name_text else "(tap to set)"
-        on_release: root.screen.show_date_picker(root.field_name)
+    text: f"{root.label_text}: {root.value_text if root.value_text else 'Tap to Set'}"
+    on_release: root.show_date_picker(root.field_name)
 
 <DescriptionField>:
-    orientation: "horizontal"
+    orientation: "vertical"
+    size_hint_y: None
+    height: self.minimum_height
     MDTextField:
         id: description_input
         hint_text: "Description"
