@@ -19,8 +19,8 @@ class LalondeApp(MDApp):
     task_manager = ObjectProperty(None)
 
     def build(self):
-        self.theme_cls.theme_style = "Dark" # its 2026, dark mode is "in". but seriously, light mode should come soon. this just works as a stop-gap to make text visible again as this app switches to a MDApp
-        self.theme_cls.material_style = "M3"
+        self.settings = Settings(self)
+        self.set_app_theme()
 
         manager = ScreenManager()
         manager.add_widget(MainScreen())
@@ -28,6 +28,10 @@ class LalondeApp(MDApp):
         manager.add_widget(FallbackScreen())
 
         return manager
+
+    def set_app_theme(self):
+        self.theme_cls.theme_style = self.settings["theme_style"]
+        self.theme_cls.material_style = self.settings["material_style"]
 
     def on_start(self):
         if platform == "android":
@@ -41,10 +45,10 @@ class LalondeApp(MDApp):
             ).open()
 
             # the actual important bit: this loads the todo.txt inside of the Android app's app folder. again, not a permanent structure. this exists as a stopgap for android development until file permissions are figured out
-            file_path = Path(self.user_data_dir) / "todo.txt"
+            file_path = Path(self.user_data_dir) / self.settings["todo_file"]
             file_path.touch(exist_ok=True)
         else:
-            file_path = Path("tmp_todo.txt")
+            file_path = Path(self.settings["todo_file"])
 
         # just for giggles and to see if this initiates properly
         self.settings = Settings(self)
