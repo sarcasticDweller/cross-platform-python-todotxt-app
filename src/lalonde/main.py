@@ -49,13 +49,6 @@ class LalondeApp(MDApp):
             file_path.touch(exist_ok=True)
         else:
             file_path = Path(self.settings["todo_file"])
-
-        # just for giggles and to see if this initiates properly
-        self.settings = Settings(self)
-        self.settings["file_path"] = str(file_path)
-        self.settings.save_settings()
-
-        # back to seriousness
         self.task_manager = TaskManager(str(file_path))
 
 if __name__ == "__main__":
