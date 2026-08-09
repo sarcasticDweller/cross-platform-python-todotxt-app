@@ -11,6 +11,7 @@ from kivy.properties import (
 )
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.screenmanager import Screen
+from kivymd.uix.list import OneLineIconListItem
 from kivymd.uix.pickers import MDDatePicker
 
 from datetime_helper.datetime_helper import date_to_str, str_to_date
@@ -24,10 +25,11 @@ def safe_string(arg: any) -> str:
         return arg
     return ""
 
-class DateField(BoxLayout):
-    field_name = StringProperty("")
+class DateField(OneLineIconListItem):
+    field_name = StringProperty("")  # Used to setattr in EditTaskScreen
     screen = ObjectProperty(None)
-    name_text = StringProperty("")
+    label_text = StringProperty("")  # Display text
+    value_text = StringProperty("")  # the date data... yes we're still encoding it as a string until i refactor it
 
     def on_screen(self, *args) -> None:
         self._connect()
@@ -37,8 +39,16 @@ class DateField(BoxLayout):
 
     def _connect(self):
         if self.screen and self.field_name:
-            self.screen.bind(**{self.field_name: self.setter("name_text")})
-            self.name_text = getattr(self.screen, self.field_name)
+            self.screen.bind(**{self.field_name: self.setter("value_text")})
+            self.value_text = getattr(self.screen, self.field_name)
+
+    def show_date_picker(self, field_name: str) -> None:
+        # IMHO this should be in DateField somehow
+        picker = MDDatePicker()
+        picker.bind(
+            on_save=lambda instance, value, date_range: self.screen.on_date_picked(field_name, value),
+        )
+        picker.open()
 
 class DescriptionField(BoxLayout):
     screen = ObjectProperty(None)
@@ -54,6 +64,8 @@ class DescriptionField(BoxLayout):
 class EditTaskScreen(Screen):
     """Warning!
     I originally intended to unify the "edit" and "create" screens, but the more I write the more "if mode == ..." clauses I have to make. This is a candidate for splitting into two different classes.
+
+    We play hot potato with dates all throughout this class. This is a candidate for refactoring and simplification.
     """
     task_manager = ObjectProperty(None)
     task_data = ObjectProperty(None)
@@ -98,19 +110,18 @@ class EditTaskScreen(Screen):
         container = self.ids.edit_task_options_container # antipattern, how are you actually supposed to query props?
         container.clear_widgets()
         container.add_widget(DescriptionField(screen=self))
+        container.add_widget(DateField(
+            screen=self,
+            field_name="due",
+            label_text="Due Date"
+        ))
 
     def _edit_mode(self, task_data: TaskData):
         self.task_data = task_data
         self.manager.current = self.name
 
-    def show_date_picker(self, field_name: str) -> None:
-        picker = MDDatePicker()
-        picker.bind(
-            on_save=lambda instance, value, date_range: self._on_date_picked(field_name, value),
-        )
-        picker.open()
 
-    def _on_date_picked(self, field_name: str, value: datetime.date) -> None:
+    def on_date_picked(self, field_name: str, value: datetime.date) -> None:
         setattr(self, field_name, date_to_str(value))
 
     def _set_fields(self, task_data: TaskData | None = None) -> None:
