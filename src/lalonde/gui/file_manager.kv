@@ -1,0 +1,17 @@
+<FolderSelectionScreen>:
+    name: "folder_select_screen"
+    orientation: 'vertical'
+
+    MDTopAppBar:
+        title: "MDFileManager"
+        left_action_items: [['menu', lambda x: None]]
+        on_kv_post: self.action_button.elevation = 0
+
+    MDFloatLayout:
+
+        MDFloatingActionButton:
+            text: "Open manager"
+            icon: "folder"
+            pos_hint: {'center_x': .5, 'center_y': .6}
+            on_release: app.file_manager_open()
+            on_kv_post: self.elevation = 0

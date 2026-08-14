@@ -55,6 +55,13 @@ Each entry keeps a stable ID so it can be referenced/updated across reviews. Don
 
 ## Resolved
 
+### ISSUE-038: `src/lalonde/gui/file_manager.py`'s `MDFileManager` example crashes on startup with `ValueError: x1 must be greater than or equal to x0`
+- **Status:** resolved
+- **Resolved:** 2026-08-14
+- **Kind:** bug
+- **Location:** `src/lalonde/gui/file_manager.py`; root cause in `kivymd/uix/behaviors/elevation.py`'s `RoundedRectangularElevationBehavior.__draw_shadow__`
+- **Note:** Same crash family as resolved ISSUE-030, but from a different source: `MDFileManager` builds its own internal `MDFloatingActionButton` (`elevation: 8`, `kivymd/uix/filemanager/filemanager.kv`'s `<FloatButton>` rule) and its own `MDTopAppBar`'s internal `action_button` (set via `MDTopAppBar.__init__`, not part of the widget tree `.walk()` reaches), neither of which this project's own KV controls, so the ISSUE-030 `on_kv_post: self.elevation = 0` pattern couldn't reach them directly. Confirmed empirically via a headless repro (`KIVY_WINDOW` default sdl2 against a real `DISPLAY`, `Clock.schedule_once` to auto-stop): instantiating `MDFileManager()` alone crashes on the very next frame, before `.show()` is ever called, because `RoundedRectangularElevationBehavior`'s corner-radius math produces an inverted rectangle (`x1 < x0`) whenever a widget's `radius` reaches half its size — true for `MDFloatingActionButton` at the default M3 style (`radius = dp(28)`, `size = dp(56) x dp(56)`). Also confirmed this reproduces unchanged with `pillow==9.5.0` (the version already pinned in `pyproject.toml`'s dev group) — it is **not** a Pillow-version regression, contrary to `CLAUDE.md`'s current dependency-pinning "Why" note for an earlier instance of this same error (flagged there, not corrected as part of this issue — see follow-up needed). Fixed by walking `self.file_manager.walk()` after construction and zeroing `elevation` on every widget that has it, plus an explicit `self.file_manager.ids.toolbar.action_button.elevation = 0` for the one widget `.walk()` doesn't reach. Verified fixed with the same headless repro technique, including the full open-manager-and-list-a-real-directory flow. General write-up of the bug class and how to avoid it going forward: `docs/kivymd_elevation_shadow_crash.md`.
+
 ### ISSUE-037: `CLAUDE.md`'s pytodotxt-gotchas section still pointed at ISSUE-015 as if it were open
 - **Status:** resolved
 - **Resolved:** 2026-08-10
