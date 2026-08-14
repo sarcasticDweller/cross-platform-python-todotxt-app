@@ -10,7 +10,7 @@ from file_loading_api.file_loading_api import ensure_file_exists
 DEFAULT_SETTINGS = {
     "theme_style": "Light",
     "material_style": "M3",
-    "todo_file_name": "tmp_todo.txt", # stopgap until the file picker is figured out
+    "todo_file_name": "todo.txt",
     "user_data_dir": ""
 }
 
