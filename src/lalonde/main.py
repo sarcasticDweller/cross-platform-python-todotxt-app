@@ -2,16 +2,18 @@ from pathlib import Path
 
 from kivy.app import platform
 from kivy.properties import ObjectProperty
-from kivy.uix.label import Label
-from kivy.uix.popup import Popup
 from kivy.uix.screenmanager import ScreenManager
 from kivymd.app import MDApp
 
+from file_loading_api.file_loading_api import (
+    ensure_file_exists,
+    launch_folder_picker,
+)
 from file_loading_api.settings import Settings
 from gui.edit_task import EditTaskScreen
 from gui.fallback_screen import FallbackScreen
 from gui.main_screen import MainScreen
-from gui.tasks_view import TaskList  #noqa: F401 - Kivy needs this to be imported
+from gui.tasks_view import TaskList  #noqa: F401 - Kivy *may* need this to be imported
 from tasks_api.task_manager import TaskManager
 
 
@@ -34,22 +36,25 @@ class LalondeApp(MDApp):
         self.theme_cls.material_style = self.settings["material_style"]
 
     def on_start(self):
-        if platform == "android":
-            # this is more of a test of jnius than anything. not permanent code.
-            from jnius import autoclass
-            Build = autoclass("android.os.Build$VERSION")
-            Popup(
-                title="pyjnius test",
-                content=Label(text=f"SDK version: {Build.SDK_INT}"),
-                size_hint=(0.8, 0.4)
-            ).open()
+        if not self.settings["user_data_dir"]: # or something cleaner
+            launch_folder_picker(platform, self.on_folder_picked)
 
-            # the actual important bit: this loads the todo.txt inside of the Android app's app folder. again, not a permanent structure. this exists as a stopgap for android development until file permissions are figured out
-            file_path = Path(self.user_data_dir) / self.settings["todo_file"]
-            file_path.touch(exist_ok=True)
-        else:
-            file_path = Path(self.settings["todo_file"])
-        self.task_manager = TaskManager(str(file_path))
+        self.on_folder_picked(self.settings["user_data_dir"])
+
+    def on_folder_picked(self, folder_path: Path):
+        if not self.settings["user_data_dir"]:
+            self.settings["user_data_dir"] = str(folder_path)
+
+        self.task_manager = TaskManager(
+            str(
+                ensure_file_exists(
+                    folder_path if isinstance(folder_path, Path) else Path(folder_path), # patchwork
+                    self.settings["todo_file_name"]
+                )
+            )
+        )
+
+
 
 if __name__ == "__main__":
     LalondeApp().run()

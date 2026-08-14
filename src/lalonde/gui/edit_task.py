@@ -14,7 +14,7 @@ from kivy.uix.screenmanager import Screen
 from kivymd.uix.list import OneLineIconListItem
 from kivymd.uix.pickers import MDDatePicker
 
-from datetime_helper.datetime_helper import date_to_str, str_to_date
+from datetime_helper.datetime_helper import date_to_str, str_to_date, today
 from tasks_api.task import TaskData, data_to_task
 
 Builder.load_file(str(Path(__file__).with_name("edit_task.kv")))
@@ -144,7 +144,7 @@ class EditTaskScreen(Screen):
             return
 
         if self.mode == "edit" and not self.completion_date:
-            self.completion_date = datetime.datetime.today()
+            self.completion_date = today()
 
         old_task_data = copy.deepcopy(self.task_data)
         self.task_data = TaskData(
