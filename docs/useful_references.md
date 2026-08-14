@@ -1,0 +1,2 @@
+- [Library of Material Design icons](https://pictogrammers.com/library/mdi/)
+- [KivyMD 1.0.2 Docs](https://kivymd.readthedocs.io/en/1.0.2/)
