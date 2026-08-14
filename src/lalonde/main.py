@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from kivy.app import platform
+from kivy.clock import mainthread
 from kivy.properties import ObjectProperty
 from kivy.uix.screenmanager import ScreenManager
 from kivymd.app import MDApp
@@ -36,15 +37,16 @@ class LalondeApp(MDApp):
         self.theme_cls.material_style = self.settings["material_style"]
 
     def on_start(self):
-        if not self.settings["user_data_dir"]: # or something cleaner
+        if self.settings["user_data_dir"]:
+            self.on_folder_picked(self.settings["user_data_dir"])
+        else:
             launch_folder_picker(platform, self.on_folder_picked)
 
-        self.on_folder_picked(self.settings["user_data_dir"])
-
+    @mainthread
     def on_folder_picked(self, folder_path: Path):
         if not self.settings["user_data_dir"]:
             self.settings["user_data_dir"] = str(folder_path)
-
+            self.settings.save_settings() # was this really the source of the bugs?
         self.task_manager = TaskManager(
             str(
                 ensure_file_exists(
