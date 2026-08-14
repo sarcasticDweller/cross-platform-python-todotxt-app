@@ -54,7 +54,5 @@ class LalondeApp(MDApp):
             )
         )
 
-
-
 if __name__ == "__main__":
     LalondeApp().run()
