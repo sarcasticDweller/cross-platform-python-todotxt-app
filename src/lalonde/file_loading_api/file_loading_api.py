@@ -6,3 +6,5 @@ def ensure_file_exists(folder_path: Path, file_name: str) -> Path:
     path = folder_path / file_name
     path.touch(exist_ok=True)
     return path
+
+class UnsupportedStorageVolumeError(TypeError): pass

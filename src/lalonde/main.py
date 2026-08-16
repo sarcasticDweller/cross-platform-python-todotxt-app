@@ -75,7 +75,5 @@ class LalondeApp(MDApp):
             case _ as unsupported_platform:
                 raise NotImplementedError(f"Attempted to launch folder picker on unsupported platform: {unsupported_platform}")
 
-class UnsupportedStorageVolumeError(ValueError): pass
-
 if __name__ == "__main__":
     LalondeApp().run()
