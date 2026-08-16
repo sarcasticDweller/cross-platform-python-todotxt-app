@@ -13,7 +13,7 @@ class MainScreen(Screen):
         if not self.task_manager:
             print("no task manager yet, action failed")
             return
-        self.manager.get_screen("edit_task_screen").open_in_mode("create")
+        self.manager.get_screen("edit_task_screen").open("create")
 
     def on_pre_enter(self):
         if not self.task_manager:

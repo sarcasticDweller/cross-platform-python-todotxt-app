@@ -11,7 +11,7 @@ from kivy.properties import (
 )
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.screenmanager import Screen
-from kivymd.uix.list import OneLineIconListItem
+from kivymd.uix.list import OneLineAvatarListItem, OneLineIconListItem, OneLineListItem
 from kivymd.uix.pickers import MDDatePicker
 
 from datetime_helper.helper import date_to_str, str_to_date, today
@@ -50,10 +50,11 @@ class DateField(OneLineIconListItem):
         )
         picker.open()
 
-class DescriptionField(BoxLayout):
+class DescriptionField(OneLineListItem):
     screen = ObjectProperty(None)
 
     def on_kv_post(self, base_widget):
+        self.ids.description_input.text = self.screen.description
         self.ids.description_input.bind(
             text=self.on_description_changed
         )
@@ -62,53 +63,44 @@ class DescriptionField(BoxLayout):
         self.screen.description = value
 
 class EditTaskScreen(Screen):
-    """Warning!
-    I originally intended to unify the "edit" and "create" screens, but the more I write the more "if mode == ..." clauses I have to make. This is a candidate for splitting into two different classes.
 
-    We play hot potato with dates all throughout this class. This is a candidate for refactoring and simplification.
-    """
+    # --- Data ----------------------------------------------------------------
+
     task_manager = ObjectProperty(None)
     task_data = ObjectProperty(None)
-
     mode = OptionProperty("create", options=["create", "edit"])
 
-    # Form Fields
+    # --- Form Field Content --------------------------------------------------
+
     description = StringProperty("")
     is_completed = BooleanProperty(False)
     priority = StringProperty("")
-    completion_date = StringProperty("") # its a date, but we enter it as text for now
-    creation_date = StringProperty("")   # its a date, ...
+    completion_date = StringProperty("")
+    creation_date = StringProperty("")   # Do not expose in create mode
     project_tags = StringProperty("")
     context_tags = StringProperty("")
-    due = StringProperty("")             # its a date, ...
+    due = StringProperty("")
     rec = StringProperty("")
 
-    # TODO: Trace these method calls and create some factory functions to generate appropriate screens based on set data.
-    # It should follow a rule of minimalism:
-        # If you don't have a due date, you probably don't need to set recurrance.
-        # If it's a new task, it's safe to say the creation date is the current date.
-    # And so on. All properties should be accessible.
+    # --- Initialization ------------------------------------------------------
 
-    def on_pre_enter(self) -> None:
-        self.clear()
-        if self.mode == "create":
-            return
-        self._set_fields(self.task_data)
-
-    def open_in_mode(self, mode: str, task_data: TaskData | None = None) -> None:
+    def open(self, mode: str, task_data: TaskData | None = None):
         self.mode = mode
-        if mode == "create":
-            self._create_mode()
-        elif mode == "edit":
-            self._edit_mode(task_data)
-        else: # this should never fire due to the nature of OptionProperty
-            raise ValueError(f"{type(self).__name__} must recieve mode 'edit' or 'create', got: '{mode}'")
+        match self.mode:
+            case "create":
+                self._open_in_create_mode()
+            case "edit":
+                self._open_in_edit_mode(task_data)
 
-    def _create_mode(self):
+    def _open_in_create_mode(self):
+        # --- Setup Data --------------
         self.task_data = TaskData(description="")
+        self._set_fields(self.task_data)
         self.manager.current = self.name
-        container = self.ids.edit_task_options_container # antipattern, how are you actually supposed to query props?
-        container.clear_widgets()
+
+        # --- Build Form --------------
+        container = self._get_container()
+        self._clear_widgets()
         container.add_widget(DescriptionField(screen=self))
         container.add_widget(DateField(
             screen=self,
@@ -116,10 +108,88 @@ class EditTaskScreen(Screen):
             label_text="Due Date"
         ))
 
-    def _edit_mode(self, task_data: TaskData):
+    def _open_in_edit_mode(self, task_data: TaskData):
+        # --- Setup Data --------------
+        if not isinstance(task_data, TaskData):
+            raise TypeError(f"edit mode requires taskdata to edit, got {task_data.__class__}")
         self.task_data = task_data
+        self._set_fields(self.task_data)
         self.manager.current = self.name
 
+        # --- Build Form --------------
+        container = self._get_container()
+        self._clear_widgets()
+        container.add_widget(DescriptionField(screen=self))
+        container.add_widget(DateField(
+            screen=self,
+            field_name="due",
+            label_text="Due Date"
+        ))
+
+    # --- Save ----------------------------------------------------------------
+
+    def save(self):
+        if self.description == "":
+            return # or better yet, Toast(text="Nothing to save!")
+
+        match self.mode:
+            case "create":
+                self._save_in_create_mode()
+            case "edit":
+                self._save_in_edit_mode()
+
+        self.back()
+
+    def _save_in_create_mode(self):
+        self.creation_date = today()
+        self.manager.add_task(data_to_task(
+            self._create_task_data_from_fields()
+        ))
+
+    def _save_in_edit_mode(self):
+        old_task_data = copy.deepcopy(self.task_data)
+        self.task_data = self._create_task_data_from_fields()
+        self.task_manager.update_task(
+            data_to_task(old_task_data),
+            data_to_task(self.task_data)
+        )
+
+    # --- Delete --------------------------------------------------------------
+
+    def delete(self):
+        match self.mode:
+            case "create":
+                self._delete_in_create_mode()
+            case "edit":
+                self._delete_in_edit_mode()
+
+        self.back()
+
+    def _delete_in_create_mode(self):
+        self.back()
+
+    def _delete_in_edit_mode(self):
+        del self.task_manager[
+            self.task_manager.find_task(
+                data_to_task(self.task_data)
+            )
+        ]
+        self.back()
+
+    # --- Helpers -------------------------------------------------------------
+
+    def back(self):
+        self._clear_widgets()
+        self._clear_fields()
+        self.manager.current = "main_screen"
+
+    def _get_container(self):
+        return self.ids.edit_task_options_container
+
+    def _clear_widgets(self):
+        self._get_container().clear_widgets()
+
+    # --- Field Manipulation ----------
 
     def on_date_picked(self, field_name: str, value: datetime.date) -> None:
         setattr(self, field_name, date_to_str(value))
@@ -138,17 +208,12 @@ class EditTaskScreen(Screen):
         self.due = date_to_str(task_data.due)
         self.rec = safe_string(task_data.rec)
 
-    def on_save(self) -> None:
-        description = self.description
-        if description == "":
-            return
+    def _clear_fields(self):
+        self._set_fields()
 
-        if self.mode == "edit" and not self.completion_date:
-            self.completion_date = today()
-
-        old_task_data = copy.deepcopy(self.task_data)
-        self.task_data = TaskData(
-            description=description,
+    def _create_task_data_from_fields(self) -> TaskData:
+        return TaskData(
+            description=self.description,
             is_completed=self.is_completed,
             priority=self.priority,
             completion_date=str_to_date(self.completion_date),
@@ -158,25 +223,3 @@ class EditTaskScreen(Screen):
             due=str_to_date(self.due),
             rec=self.rec
         )
-
-        if self.mode == "create":
-            self.task_manager.add_task(data_to_task(self.task_data))
-        if self.mode == "edit":
-            self.task_manager.update_task(
-                old_task=data_to_task(old_task_data),
-                new_task=data_to_task(self.task_data)
-            )
-        self.clear()
-        self.on_back()
-
-    def on_back(self) -> None:
-        self.manager.current = "main_screen"
-
-    def on_delete(self) -> None:
-        if self.mode == "create" and self.description == "":
-            return
-        del self.task_manager[self.task_manager.find_task(data_to_task(self.task_data))]
-        self.on_back()
-
-    def clear(self) -> None:
-        self._set_fields()

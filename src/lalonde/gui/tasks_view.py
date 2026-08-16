@@ -35,7 +35,7 @@ class TaskWidget(OneLineIconListItem):
     def on_edit(self):
         """Pass self.task_data through to the edit screen to pre-populate fields with it."""
         manager = App.get_running_app().root
-        manager.get_screen("edit_task_screen").open_in_mode("edit", self.task_data)
+        manager.get_screen("edit_task_screen").open("edit", self.task_data)
 
 class TaskList(BoxLayout):
     task_manager = ObjectProperty(None)

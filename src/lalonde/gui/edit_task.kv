@@ -1,17 +1,21 @@
 <DateField>:
+    size_hint_y: None
     text: f"{root.label_text}: {root.value_text if root.value_text else 'Tap to Set'}"
     on_release: root.show_date_picker(root.field_name)
+    IconLeftWidget:
+        icon: "bullseye-arrow"
 
 <DescriptionField>:
-    orientation: "vertical"
     size_hint_y: None
-    height: self.minimum_height
+    height: description_input.height
     MDTextField:
+        icon_left: "text-box-edit-outline"
+        pos_hint: {"x": 0.033, "top": 1} # placeholder for now, does not look good on all display sizes
         id: description_input
         hint_text: "Description"
-        helper_text: "Describe the task"
+        #helper_text: "Describe the task"
         multiline: True
-        mode: "rectangle"
+        mode: "line"
 
 <EditTaskScreen>:
     name: "edit_task_screen"
@@ -22,8 +26,8 @@
             title: "Edit Task" if root.mode == "edit" else "Create Task"
             pos_hint: {"top": 1}
             on_kv_post: self.action_button.elevation = 0
-            left_action_items: [["arrow-left", lambda x: root.on_back()]]
-            right_action_items: [["delete-forever", lambda x: root.on_delete()], ["content-save", lambda x: root.on_save()]]
+            left_action_items: [["arrow-left", lambda x: root.back()]]
+            right_action_items: [["delete-forever", lambda x: root.delete()], ["content-save", lambda x: root.save()]]
 
         MDScrollView:
             MDList:

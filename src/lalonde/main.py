@@ -63,7 +63,7 @@ class LalondeApp(MDApp):
     def launch_folder_picker(self):
         def kivy_folder_picker():
             self.root.current = "folder_select_screen"
-            self.root.get_screen("folder_select_screen").file_manager_open(self.on_folder_picked)
+            self.root.get_screen("folder_select_screen").open(self.on_folder_picked)
 
         match platform:
             case "android":

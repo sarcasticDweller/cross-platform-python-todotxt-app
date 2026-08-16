@@ -28,7 +28,7 @@ class FolderSelectionScreen(Screen):
                 widget.elevation = 0
         self.file_manager.ids.toolbar.action_button.elevation = 0
 
-    def file_manager_open(self, on_folder_picked):
+    def open(self, on_folder_picked):
         self.on_folder_picked = on_folder_picked
         self.file_manager.show('/')  # output manager to the screen
         self.manager_open = True
