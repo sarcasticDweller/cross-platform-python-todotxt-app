@@ -1,7 +1,7 @@
 import datetime
 
 import pytest
-from tasks_api.task import (
+from tasks.task import (
     TaskData,
     compare_tasks_for_equality,
     create_task,

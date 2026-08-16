@@ -1,6 +1,7 @@
 import pytest
-from tasks_api.task import create_task
-from tasks_api.task_manager import TaskManager
+from tasks.task_manager import TaskManager
+
+from tasks.task import create_task
 
 
 @pytest.fixture

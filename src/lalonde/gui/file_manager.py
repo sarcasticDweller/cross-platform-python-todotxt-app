@@ -9,6 +9,7 @@ from kivymd.uix.filemanager import MDFileManager
 Builder.load_file(str(Path(__file__).with_name("file_manager.kv")))
 
 class FolderSelectionScreen(Screen):
+    """Code mostly ripped from the example code for KivyMD"""
     on_folder_picked = ObjectProperty(None)
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -20,12 +21,8 @@ class FolderSelectionScreen(Screen):
             select_path=self.select_path,
             preview=True,
         )
-        # MDFileManager builds its own internal FloatingActionButton (elevation: 8)
-        # and toolbar (elevation: 10) with nonzero elevation, which crashes with
-        # `ValueError: x1 must be greater than or equal to x0` the first time Kivy
-        # ticks a frame (see docs/kivymd_elevation_shadow_crash.md). We don't own
-        # that KV, so zero elevation everywhere in the tree after construction,
-        # same as the on_kv_post workaround above for our own widgets.
+
+        # Spike to force elevation to zero. See `docs/kivy_elevation_shadow_crash.md`
         for widget in self.file_manager.walk():
             if hasattr(widget, "elevation"):
                 widget.elevation = 0

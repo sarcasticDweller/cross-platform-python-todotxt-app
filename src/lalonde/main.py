@@ -6,16 +6,14 @@ from kivy.properties import ObjectProperty
 from kivy.uix.screenmanager import ScreenManager
 from kivymd.app import MDApp
 
-from file_loading_api.file_loading_api import (
-    ensure_file_exists,
-)
-from file_loading_api.settings import Settings
+from files.helpers import ensure_file_exists
+from files.settings import Settings
 from gui.edit_task import EditTaskScreen
 from gui.fallback_screen import FallbackScreen
 from gui.file_manager import FolderSelectionScreen
 from gui.main_screen import MainScreen
 from gui.tasks_view import TaskList  #noqa: F401 - Kivy *may* need this to be imported
-from tasks_api.task_manager import TaskManager
+from tasks.manager import TaskManager
 
 
 class LalondeApp(MDApp):
@@ -29,7 +27,8 @@ class LalondeApp(MDApp):
         manager.add_widget(MainScreen())
         manager.add_widget(EditTaskScreen())
         manager.add_widget(FallbackScreen())
-        manager.add_widget(FolderSelectionScreen(on_folder_picked=self.on_folder_picked)) # spaghetification
+        #manager.add_widget(FolderSelectionScreen(on_folder_picked=self.on_folder_picked)) # spaghetification
+        manager.add_widget(FolderSelectionScreen())
 
         return manager
 
@@ -42,6 +41,8 @@ class LalondeApp(MDApp):
             self.on_folder_picked(self.settings["user_data_dir"])
         else:
             self.launch_folder_picker()
+
+    # --- Folder Selection ----------------------------------------------------
 
     @mainthread
     def on_folder_picked(self, folder_path: Path):
@@ -60,20 +61,28 @@ class LalondeApp(MDApp):
         self.root.get_screen("main_screen")
 
     def launch_folder_picker(self):
-        def case_pc():
+        def kivy_folder_picker():
             self.root.current = "folder_select_screen"
             self.root.get_screen("folder_select_screen").file_manager_open(self.on_folder_picked)
 
         match platform:
             case "android":
-                from file_loading_api.android import launch_android_folder_picker
-                launch_android_folder_picker(self.on_folder_picked)
+                from files.android import (
+                    has_storage_permission,
+                    launch_android_folder_picker,
+                    request_storage_permission,
+                )
+                if has_storage_permission():
+                    launch_android_folder_picker(self.on_folder_picked)
+                else:
+                    request_storage_permission()
             case "linux":
-                case_pc()
+                kivy_folder_picker()
             case "macosx":
-                case_pc()
+                kivy_folder_picker()
             case _ as unsupported_platform:
                 raise NotImplementedError(f"Attempted to launch folder picker on unsupported platform: {unsupported_platform}")
+
 
 if __name__ == "__main__":
     LalondeApp().run()

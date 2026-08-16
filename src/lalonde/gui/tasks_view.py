@@ -7,8 +7,8 @@ from kivy.properties import BooleanProperty, ObjectProperty, StringProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivymd.uix.list import OneLineIconListItem
 
-from datetime_helper.datetime_helper import today
-from tasks_api.task import data_to_task, task_to_data
+from datetime_helper.helper import today
+from tasks.task import data_to_task, task_to_data
 
 Builder.load_file(str(Path(__file__).with_name("tasks_view.kv")))
 Factory.register("CheckboxLeftWidget", module="kivymd.uix.list")

@@ -14,8 +14,8 @@ from kivy.uix.screenmanager import Screen
 from kivymd.uix.list import OneLineIconListItem
 from kivymd.uix.pickers import MDDatePicker
 
-from datetime_helper.datetime_helper import date_to_str, str_to_date, today
-from tasks_api.task import TaskData, data_to_task
+from datetime_helper.helper import date_to_str, str_to_date, today
+from tasks.task import TaskData, data_to_task
 
 Builder.load_file(str(Path(__file__).with_name("edit_task.kv")))
 

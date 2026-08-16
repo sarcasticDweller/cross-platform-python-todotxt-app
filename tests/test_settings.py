@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 from kivymd.app import MDApp
 
-from file_loading_api.settings import Settings
+from files.settings import Settings
 
 
 @pytest.fixture

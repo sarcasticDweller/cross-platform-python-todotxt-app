@@ -5,13 +5,13 @@ from pathlib import Path
 
 from kivymd.app import MDApp
 
-from file_loading_api.file_loading_api import ensure_file_exists
+from files.helpers import ensure_file_exists
 
 DEFAULT_SETTINGS = {
     "theme_style": "Light",
     "material_style": "M3",
     "todo_file_name": "todo.txt",
-    "user_data_dir": ""
+    "user_data_dir": "" # must be set by system
 }
 
 class AppHasNoNameError(ValueError): pass
