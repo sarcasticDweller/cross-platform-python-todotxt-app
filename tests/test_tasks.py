@@ -2,6 +2,7 @@ import datetime
 
 import pytest
 
+from datetime_helper import get_datetime
 from tasks import TaskData, compare_tasks_for_equality, data_to_task, task_to_data
 from tasks.task import create_task
 
@@ -35,7 +36,7 @@ def test_create_task_sets_rec_attribute():
     assert task.attributes.get("rec") == ["+1w"]
 
 def test_create_task_sets_alarm_attribute():
-    task = create_task(description="foo", alarm=datetime.datetime(2026, 8, 1, 9, 30))
+    task = create_task(description="foo", alarm=get_datetime(2026, 8, 1, 9, 30, 0))
     assert task.attributes.get("alarm") == ["2026-08-01T09:30:00"]
 
 def test_create_task_alarm_rejects_str():
@@ -155,8 +156,8 @@ def test_task_to_data_alarm_defaults_to_none():
     assert task_to_data(task).alarm is None
 
 def test_task_to_data_alarm_is_datetime_when_set():
-    task = create_task(description="foo", alarm=datetime.datetime(2026, 8, 1, 9, 30))
-    assert task_to_data(task).alarm == datetime.datetime(2026, 8, 1, 9, 30)
+    task = create_task(description="foo", alarm=get_datetime(2026, 8, 1, 9, 30, 0))
+    assert task_to_data(task).alarm == get_datetime(2026, 8, 1, 9, 30, 0)
 
 def test_task_to_data_mutating_project_tags_does_not_affect_original_task():
     task = create_task(description="foo", project_tags=["home"])
@@ -195,7 +196,7 @@ def test_data_to_task_round_trip_with_due_and_rec():
     assert compare_tasks_for_equality(original, round_tripped)
 
 def test_data_to_task_round_trip_with_alarm():
-    original = create_task(description="foo", alarm=datetime.datetime(2026, 8, 1, 9, 30))
+    original = create_task(description="foo", alarm=get_datetime(2026, 8, 1, 9, 30, 0))
     round_tripped = data_to_task(task_to_data(original))
     assert compare_tasks_for_equality(original, round_tripped)
 

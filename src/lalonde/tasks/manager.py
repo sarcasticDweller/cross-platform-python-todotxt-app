@@ -2,7 +2,7 @@ import functools
 
 import pytodotxt
 
-from tasks import compare_tasks_for_equality
+from tasks.task import compare_tasks_for_equality
 
 
 def auto_refresh(func):

@@ -5,6 +5,8 @@ from dataclasses import dataclass, field
 
 import pytodotxt
 
+import datetime_helper as dh
+
 # pytodotxt doesn't treat `due` as a real date property (since it doesnt even recognize that it exists). for the scope of this project, i want to surface it as a datetime item while encoding it as text (iso format). expect to see extra logic around `due` to this end.
 
 def create_task(
@@ -107,9 +109,9 @@ def task_to_data(task: pytodotxt.Task) -> TaskData:
         creation_date=task.creation_date,
         project_tags=task.projects,
         context_tags=task.contexts,
-        due=datetime.date.fromisoformat(due_str) if due_str else None,
+        due=dh.str_to_date(due_str),
         rec=rec_str,
-        alarm=datetime.datetime.fromisoformat(alarm_str) if alarm_str else None
+        alarm=dh.str_to_datetime(alarm_str)
     )
 
 def data_to_task(task_data: TaskData) -> pytodotxt.Task:
