@@ -1,5 +1,5 @@
 import pytest
-from tasks.task_manager import TaskManager
+from tasks.manager import TaskManager
 
 from tasks.task import create_task
 

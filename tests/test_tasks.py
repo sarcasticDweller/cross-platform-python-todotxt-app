@@ -1,13 +1,9 @@
 import datetime
 
 import pytest
-from tasks.task import (
-    TaskData,
-    compare_tasks_for_equality,
-    create_task,
-    data_to_task,
-    task_to_data,
-)
+
+from tasks import TaskData, compare_tasks_for_equality, data_to_task, task_to_data
+from tasks.task import create_task
 
 FILE_PATH = "tmp_todo.txt"
 

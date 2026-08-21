@@ -17,28 +17,28 @@ def create_task(
     context_tags: list[str] | None = None,
     due: datetime.date| None = None,
     rec: str | None = None,
+    alarm: str | None = None
 ) -> pytodotxt.Task:
     """Helper pytodotxt.Task constructor. Lossy by design: it only checks that its parameters will parse, not that they will be preserved on write. This is by design; data-integrity validation should be done before creating a task object."""
     # lets keep things clean and write things in the same order as the function signature. this tedious file is a pain enough to read as it is
+
+    # --- Vanila todotxt data -------------------------------------------------
 
     task = pytodotxt.Task(description)
 
     task.is_completed = is_completed
 
-    if priority:
-        if len(priority) > 1 or not priority.isupper():
-            raise ValueError(f"priority expected one upercase letter, got {priority}")
-        task.priority = priority
+    if priority and (len(priority) > 1 or not priority.isupper()):
+        raise ValueError(f"priority expected one upercase letter, got {priority}")
+    task.priority = priority
 
-    if completion_date:
-        if not isinstance(completion_date, datetime.date):
-            raise TypeError(f"completion_date must be a datetime.date, got {type(completion_date).__name__}")
-        task.completion_date = completion_date
+    if completion_date and (not isinstance(completion_date, datetime.date)):
+        raise TypeError(f"completion_date must be a datetime.date, got {type(completion_date).__name__}")
+    task.completion_date = completion_date
 
-    if creation_date:
-        if not isinstance(creation_date, datetime.date):
-            raise TypeError(f"creation_date must be a datetime.date, got {type(creation_date).__name__}")
-        task.creation_date = creation_date
+    if creation_date and not isinstance(creation_date, datetime.date):
+        raise TypeError(f"creation_date must be a datetime.date, got {type(creation_date).__name__}")
+    task.creation_date = creation_date
 
     if project_tags:
         for tag in project_tags:
@@ -51,6 +51,8 @@ def create_task(
             if not tag:
                 continue
             task.add_context(tag)
+
+    # --- Key:value data ------------------------------------------------------
 
     if due:
         if not isinstance(due, datetime.date):
