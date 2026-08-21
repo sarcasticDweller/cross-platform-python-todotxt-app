@@ -194,6 +194,35 @@ class EditTaskScreen(Screen):
     def on_date_picked(self, field_name: str, value: datetime.date) -> None:
         setattr(self, field_name, date_to_str(value))
 
+    def open_in_mode(self, mode: str, task_data: TaskData | None = None) -> None:
+        self.mode = mode
+        if mode == "create":
+            self._create_mode()
+        elif mode == "edit":
+            self._edit_mode(task_data)
+        else: # this should never fire due to the nature of OptionProperty
+            raise ValueError(f"{type(self).__name__} must recieve mode 'edit' or 'create', got: '{mode}'")
+
+    def _create_mode(self):
+        self.task_data = TaskData(description="")
+        self.manager.current = self.name
+        container = self.ids.edit_task_options_container # antipattern, how are you actually supposed to query props?
+        container.clear_widgets()
+        container.add_widget(DescriptionField(screen=self))
+        container.add_widget(DateField(
+            screen=self,
+            field_name="due",
+            label_text="Due Date"
+        ))
+
+    def _edit_mode(self, task_data: TaskData):
+        self.task_data = task_data
+        self.manager.current = self.name
+
+
+    def on_date_picked(self, field_name: str, value: datetime.date) -> None:
+        setattr(self, field_name, date_to_str(value))
+
     def _set_fields(self, task_data: TaskData | None = None) -> None:
         if task_data == None:
             task_data = TaskData(description="")
