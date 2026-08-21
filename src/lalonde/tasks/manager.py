@@ -2,14 +2,14 @@ import functools
 
 import pytodotxt
 
-from tasks.task import compare_tasks_for_equality
+from tasks import compare_tasks_for_equality
 
 
 def auto_refresh(func):
     """
     Only for internal use with TaskManager (see below).
 
-    Really, this should be done with a watchdog instead of refreshing every cycle. But wtv.
+    TODO: replace this with a file watchdog that calls TaskManager.refresh() when the file diffs with memory
     """
     @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
@@ -50,7 +50,6 @@ class TaskManager:
     def __delitem__(self, index: int) -> None:
         del self.todo.tasks[index]
         self.todo.save()
-
 
     @auto_refresh
     def add_task(self, task: pytodotxt.Task) -> None:    # Crud: Create

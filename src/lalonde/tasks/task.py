@@ -17,7 +17,7 @@ def create_task(
     context_tags: list[str] | None = None,
     due: datetime.date| None = None,
     rec: str | None = None,
-    alarm: str | None = None
+    alarm: datetime.datetime | None = None
 ) -> pytodotxt.Task:
     """Helper pytodotxt.Task constructor. Lossy by design: it only checks that its parameters will parse, not that they will be preserved on write. This is by design; data-integrity validation should be done before creating a task object."""
     # lets keep things clean and write things in the same order as the function signature. this tedious file is a pain enough to read as it is
@@ -63,6 +63,11 @@ def create_task(
     if rec:
         task.add_attribute("rec", rec)
 
+    if alarm:
+        if not isinstance(alarm, datetime.datetime):
+            raise TypeError(f"alarm must be a datetime.datetime, got {type(alarm).__name__}")
+        task.add_attribute("alarm", alarm.isoformat())
+
     task.parse(str(task))
     return task
 
@@ -78,12 +83,21 @@ class TaskData:
     context_tags: list[str] = field(default_factory=list)
     due: datetime.date | None = None
     rec: str | None = None
+    alarm: datetime.datetime | None = None
+
+def compare_tasks_for_equality(first: pytodotxt.Task, *rest: pytodotxt.Task) -> bool:
+    """Compares whether 1+ tasks are equal to each other by comparing their strings directly."""
+    return all(str(first) == str(task) for task in rest)
+
+# --- Datatype Conversion Functions -------------------------------------------
+# These stay as funcs because pytodotxt.Task can't be extended.
 
 def task_to_data(task: pytodotxt.Task) -> TaskData:
     """Converts a task into a detached TaskData copy of itself."""
-    # According to Claude (awful start to any sentence, I know), the values for `due` and `rec` get encoded into a list at some point in pytodotxt's sourcecode. This weird syntax down here ensures that 1. there is always a list with at least one value in it (`None`) and 2. the first value of that list is passed into the respective parameter.
+    # According to Claude (awful start to any sentence, I know), the values for key:val props get encoded into a list at some point in pytodotxt's sourcecode. This weird syntax down here ensures that 1. there is always a list with at least one value in it (`None`) and 2. the first value of that list is passed into the respective parameter.
     due_str = task.attributes.get("due", [None])[0]
     rec_str = task.attributes.get("rec", [None])[0]
+    alarm_str = task.attributes.get("alarm", [None])[0]
 
     return TaskData(
         description=task.bare_description(),
@@ -93,8 +107,9 @@ def task_to_data(task: pytodotxt.Task) -> TaskData:
         creation_date=task.creation_date,
         project_tags=task.projects,
         context_tags=task.contexts,
-        due=datetime.date.fromisoformat(due_str) if due_str else None, # remember that this date is encoded as text in pytodotxt's library
-        rec=rec_str
+        due=datetime.date.fromisoformat(due_str) if due_str else None,
+        rec=rec_str,
+        alarm=datetime.datetime.fromisoformat(alarm_str) if alarm_str else None
     )
 
 def data_to_task(task_data: TaskData) -> pytodotxt.Task:
@@ -108,8 +123,5 @@ def data_to_task(task_data: TaskData) -> pytodotxt.Task:
         context_tags=task_data.context_tags,
         due=task_data.due,
         rec=task_data.rec,
+        alarm=task_data.alarm
     )
-
-def compare_tasks_for_equality(first: pytodotxt.Task, *rest: pytodotxt.Task) -> bool:
-    """Compares whether 1+ tasks are equal to each other by comparing their strings directly."""
-    return all(str(first) == str(task) for task in rest)

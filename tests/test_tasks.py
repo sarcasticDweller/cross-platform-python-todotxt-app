@@ -34,6 +34,19 @@ def test_create_task_sets_rec_attribute():
     task = create_task(description="foo", rec="+1w")
     assert task.attributes.get("rec") == ["+1w"]
 
+def test_create_task_sets_alarm_attribute():
+    task = create_task(description="foo", alarm=datetime.datetime(2026, 8, 1, 9, 30))
+    assert task.attributes.get("alarm") == ["2026-08-01T09:30:00"]
+
+def test_create_task_alarm_rejects_str():
+    with pytest.raises(TypeError):
+        create_task(description="foo", alarm="2026-08-01T09:30:00")
+
+def test_create_task_alarm_rejects_date():
+    # a plain date is missing the time component alarm needs -- must be a datetime.datetime
+    with pytest.raises(TypeError):
+        create_task(description="foo", alarm=datetime.date(2026, 8, 1))
+
 def test_create_task_sets_priority():
     task = create_task(description="foo", priority="A")
     assert task.priority == "A"
@@ -137,6 +150,14 @@ def test_task_to_data_due_is_date_when_set():
     task = create_task(description="foo", due=datetime.date(2026, 8, 1))
     assert task_to_data(task).due == datetime.date(2026, 8, 1)
 
+def test_task_to_data_alarm_defaults_to_none():
+    task = create_task(description="foo")
+    assert task_to_data(task).alarm is None
+
+def test_task_to_data_alarm_is_datetime_when_set():
+    task = create_task(description="foo", alarm=datetime.datetime(2026, 8, 1, 9, 30))
+    assert task_to_data(task).alarm == datetime.datetime(2026, 8, 1, 9, 30)
+
 def test_task_to_data_mutating_project_tags_does_not_affect_original_task():
     task = create_task(description="foo", project_tags=["home"])
     data = task_to_data(task)
@@ -170,6 +191,11 @@ def test_data_to_task_round_trip_with_project_and_context_tags():
 
 def test_data_to_task_round_trip_with_due_and_rec():
     original = create_task(description="foo", due=datetime.date(2026, 8, 1), rec="+1w")
+    round_tripped = data_to_task(task_to_data(original))
+    assert compare_tasks_for_equality(original, round_tripped)
+
+def test_data_to_task_round_trip_with_alarm():
+    original = create_task(description="foo", alarm=datetime.datetime(2026, 8, 1, 9, 30))
     round_tripped = data_to_task(task_to_data(original))
     assert compare_tasks_for_equality(original, round_tripped)
 
