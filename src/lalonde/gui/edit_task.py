@@ -14,8 +14,8 @@ from kivy.uix.screenmanager import Screen
 from kivymd.uix.list import OneLineAvatarListItem, OneLineIconListItem, OneLineListItem
 from kivymd.uix.pickers import MDDatePicker
 
-from datetime_helper.helper import date_to_str, str_to_date, today
-from tasks.task import TaskData, data_to_task
+import datetime_helper as dh
+from tasks import TaskData, data_to_task
 
 Builder.load_file(str(Path(__file__).with_name("edit_task.kv")))
 
@@ -141,8 +141,8 @@ class EditTaskScreen(Screen):
         self.back()
 
     def _save_in_create_mode(self):
-        self.creation_date = today()
-        self.manager.add_task(data_to_task(
+        self.creation_date = dh.date_to_str(dh.today())
+        self.task_manager.add_task(data_to_task(
             self._create_task_data_from_fields()
         ))
 
@@ -192,7 +192,7 @@ class EditTaskScreen(Screen):
     # --- Field Manipulation ----------
 
     def on_date_picked(self, field_name: str, value: datetime.date) -> None:
-        setattr(self, field_name, date_to_str(value))
+        setattr(self, field_name, dh.date_to_str(value))
 
     def open_in_mode(self, mode: str, task_data: TaskData | None = None) -> None:
         self.mode = mode
@@ -221,7 +221,7 @@ class EditTaskScreen(Screen):
 
 
     def on_date_picked(self, field_name: str, value: datetime.date) -> None:
-        setattr(self, field_name, date_to_str(value))
+        setattr(self, field_name, dh.date_to_str(value))
 
     def _set_fields(self, task_data: TaskData | None = None) -> None:
         if task_data == None:
@@ -230,11 +230,11 @@ class EditTaskScreen(Screen):
         self.description = task_data.description # because a description is a requirement for all tasks, it does not need `safe_string()` insurance
         self.is_completed = task_data.is_completed
         self.priority = safe_string(task_data.priority)
-        self.completion_date = date_to_str(task_data.completion_date)
-        self.creation_date = date_to_str(task_data.creation_date)
+        self.completion_date = dh.date_to_str(task_data.completion_date)
+        self.creation_date = dh.date_to_str(task_data.creation_date)
         self.project_tags = safe_string(task_data.project_tags)
         self.context_tags = safe_string(task_data.context_tags)
-        self.due = date_to_str(task_data.due)
+        self.due = dh.date_to_str(task_data.due)
         self.rec = safe_string(task_data.rec)
 
     def _clear_fields(self):
@@ -245,10 +245,10 @@ class EditTaskScreen(Screen):
             description=self.description,
             is_completed=self.is_completed,
             priority=self.priority,
-            completion_date=str_to_date(self.completion_date),
-            creation_date=str_to_date(self.creation_date),
+            completion_date=dh.str_to_date(self.completion_date),
+            creation_date=dh.str_to_date(self.creation_date),
             project_tags=self.project_tags.split(" "),
             context_tags=self.context_tags.split(" "),
-            due=str_to_date(self.due),
+            due=dh.str_to_date(self.due),
             rec=self.rec
         )

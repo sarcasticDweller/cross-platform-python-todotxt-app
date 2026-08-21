@@ -6,14 +6,14 @@ from kivy.properties import ObjectProperty
 from kivy.uix.screenmanager import ScreenManager
 from kivymd.app import MDApp
 
-from files.helpers import ensure_file_exists
-from files.settings import Settings
-from gui.edit_task import EditTaskScreen
-from gui.fallback_screen import FallbackScreen
-from gui.file_manager import FolderSelectionScreen
-from gui.main_screen import MainScreen
-from gui.tasks_view import TaskList  #noqa: F401 - Kivy *may* need this to be imported
-from tasks.manager import TaskManager
+from files import Settings, ensure_file_exists
+from gui import (
+    EditTaskScreen,
+    FallbackScreen,
+    FolderSelectionScreen,
+    MainScreen,
+)
+from tasks import TaskManager
 
 
 class LalondeApp(MDApp):
@@ -67,15 +67,11 @@ class LalondeApp(MDApp):
 
         match platform:
             case "android":
-                from files.android import (
-                    has_storage_permission,
-                    launch_android_folder_picker,
-                    request_storage_permission,
-                )
-                if has_storage_permission():
-                    launch_android_folder_picker(self.on_folder_picked)
+                from files import android
+                if android.has_storage_permission():
+                    android.launch_folder_picker(self.on_folder_picked)
                 else:
-                    request_storage_permission()
+                    android.request_storage_permission()
             case "linux":
                 kivy_folder_picker()
             case "macosx":
