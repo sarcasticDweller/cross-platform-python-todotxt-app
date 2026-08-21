@@ -6,9 +6,7 @@ Each entry keeps a stable ID so it can be referenced/updated across reviews. Don
 
 ## Open
 
-<<<<<<< HEAD
 ### ISSUE-031: Building for more than one Android arch in `buildozer.spec`'s `android.archs` reliably breaks the build — python-for-android reuses one shared scratch venv across archs without clearing it, corrupting pip on the second arch
-=======
 ### ISSUE-028: Building for more than one Android arch in `buildozer.spec`'s `android.archs` reliably breaks the build — python-for-android reuses one shared scratch venv across archs without clearing it, corrupting pip on the second arch
 - **Status:** open
 - **Kind:** bug (upstream, in python-for-android — not fixable from this repo)
@@ -18,7 +16,6 @@ Each entry keeps a stable ID so it can be referenced/updated across reviews. Don
 - **Direction (not prescriptive):** can't be fixed by editing p4a directly (it's downloaded fresh into `.buildozer/`, untracked, not part of this repo). Current workaround, applied on branch `drop-armeabi-v7a-support`: dropped `android.archs` to `arm64-v8a` only, sidestepping the bug since there's only one arch stage. A fix that keeps 32-bit (`armeabi-v7a`) support would need something like a Buildozer `p4a.hook` that force-clears `ctx.build_dir`'s shared `venv` directory before each arch's pymodules-install stage.
 
 ### ISSUE-027: `TaskWidget.on_completed()` always stamps `completion_date`, even when un-completing a task — and `create_task()` has no guard stopping `completion_date` from being set without `is_completed=True` or without a `creation_date`, so the value is silently swallowed on save
->>>>>>> main
 - **Status:** open
 - **GitHub:** https://github.com/sarcasticDweller/cross-platform-python-todotxt-app/issues/4
 - **Kind:** bug (upstream, in python-for-android — not fixable from this repo)
