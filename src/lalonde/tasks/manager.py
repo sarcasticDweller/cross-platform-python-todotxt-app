@@ -46,6 +46,7 @@ class TaskManager:
 
     def __setitem__(self, index: int, task: pytodotxt.Task) -> None:
         self.todo.tasks[index] = task
+        self.todo.save()
 
     def __delitem__(self, index: int) -> None:
         del self.todo.tasks[index]

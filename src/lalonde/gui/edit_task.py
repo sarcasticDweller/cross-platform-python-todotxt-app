@@ -9,9 +9,8 @@ from kivy.properties import (
     OptionProperty,
     StringProperty,
 )
-from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.screenmanager import Screen
-from kivymd.uix.list import OneLineAvatarListItem, OneLineIconListItem, OneLineListItem
+from kivymd.uix.list import OneLineIconListItem, OneLineListItem
 from kivymd.uix.pickers import MDDatePicker, MDTimePicker
 
 import datetime_helper as dh
@@ -185,7 +184,7 @@ class EditTaskScreen(Screen):
         self.back()
 
     def _save_in_create_mode(self):
-        self.creation_date = dh.date_to_str(dh.today())
+        self.creation_date = dh.date_to_str(dh.today_date())
         self.task_manager.add_task(data_to_task(
             self._create_task_data_from_fields()
         ))

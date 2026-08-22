@@ -3,7 +3,8 @@ from datetime_helper.helper import (
     get_datetime,
     str_to_date,
     str_to_datetime,
-    today,
+    today_date,
+    today_datetime,
 )
 
 __all__ = [
@@ -11,5 +12,6 @@ __all__ = [
     "get_datetime",
     "str_to_date",
     "str_to_datetime",
-    "today"
+    "today_date",
+    "today_datetime"
 ]

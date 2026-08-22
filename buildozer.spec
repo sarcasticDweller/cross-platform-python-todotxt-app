@@ -65,7 +65,17 @@ orientation = portrait
 # launched. This is optionally followed by ":foreground" for foreground services or
 # ":foreground:sticky" for sticky foreground services. The default is a background service.
 # Bound services are not supported.
-#services = NAME:ENTRYPOINT_TO_PY,NAME2:ENTRYPOINT2_TO_PY
+# Generates a manifest-declared <service> that boots its own Python interpreter, so it can
+# run with the app process dead -- this is what an alarm's PendingIntent targets.
+# `foreground` lets it legally run while backgrounded (API 26+).
+# Exposed to Python as autoclass("<package.domain>.<package.name>.ServiceAlarm").
+#
+# No foregroundServiceType here on purpose: it isn't enforced until API 34, and the value we
+# actually want (specialUse) doesn't exist in the API 33 attribute enum, so declaring it
+# fails resource linking. When android.api moves to 34, this needs
+# ":foregroundServiceType=specialUse" AND a <property> subtype element inside <service>,
+# which requires the p4a manifest hook -- see docs/android_alarms.md, phase E.
+services = alarm:./alarms/service.py:foreground
 
 #
 # OSX Specific
@@ -104,16 +114,16 @@ fullscreen = 0
 # (list) Permissions
 # (See https://python-for-android.readthedocs.io/en/latest/buildoptions.html for all the supported syntaxes and properties)
 #android.permissions = android.permission.INTERNET, (name=android.permission.WRITE_EXTERNAL_STORAGE;maxSdkVersion=18)
-android.permissions = MANAGE_EXTERNAL_STORAGE
+android.permissions = MANAGE_EXTERNAL_STORAGE, POST_NOTIFICATIONS, FOREGROUND_SERVICE, FOREGROUND_SERVICE_SPECIAL_USE, WAKE_LOCK
 
 # (list) features (adds uses-feature -tags to manifest)
 #android.features = android.hardware.usb.host
 
 # (int) Target Android API, should be as high as possible.
-#android.api = 33
+android.api = 33
 
 # (int) Minimum API your APK / AAB will support.
-#android.minapi = 24
+android.minapi = 26
 
 # (int) Android SDK version to use
 #android.sdk = 20
@@ -122,7 +132,7 @@ android.permissions = MANAGE_EXTERNAL_STORAGE
 #android.ndk = 23b
 
 # (int) Android NDK API to use. This is the minimum API your app will support, it should usually match android.minapi.
-#android.ndk_api = 21
+android.ndk_api = 26
 
 # (str) Android NDK directory (if empty, it will be automatically downloaded.)
 #android.ndk_path =

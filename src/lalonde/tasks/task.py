@@ -94,12 +94,16 @@ def compare_tasks_for_equality(first: pytodotxt.Task, *rest: pytodotxt.Task) -> 
 # --- Datatype Conversion Functions -------------------------------------------
 # These stay as funcs because pytodotxt.Task can't be extended.
 
+def get_keyval_attrib(task: pytodotxt.Task, key: str) -> str:
+    """Gets the first key:val attribute for a given key"""
+    return task.attributes.get(key, [None])[0]
+
 def task_to_data(task: pytodotxt.Task) -> TaskData:
     """Converts a task into a detached TaskData copy of itself."""
     # According to Claude (awful start to any sentence, I know), the values for key:val props get encoded into a list at some point in pytodotxt's sourcecode. This weird syntax down here ensures that 1. there is always a list with at least one value in it (`None`) and 2. the first value of that list is passed into the respective parameter.
-    due_str = task.attributes.get("due", [None])[0]
-    rec_str = task.attributes.get("rec", [None])[0]
-    alarm_str = task.attributes.get("alarm", [None])[0]
+    due_str = get_keyval_attrib(task, "due")
+    rec_str = get_keyval_attrib(task, "rec")
+    alarm_str = get_keyval_attrib(task, "alarm")
 
     return TaskData(
         description=task.bare_description(),

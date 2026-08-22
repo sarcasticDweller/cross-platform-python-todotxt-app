@@ -7,6 +7,7 @@
             title: "Lalonde"
             pos_hint: {"top": 1}
             on_kv_post: self.action_button.elevation = 0
+            right_action_items: [["bell", lambda x: root.on_test_notification()]]
 
         TaskList:
             id: task_list

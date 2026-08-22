@@ -4,7 +4,7 @@ from urllib.parse import unquote
 from android import activity
 from jnius import autoclass
 
-from files import UnsupportedStorageVolumeError
+from files.helpers import UnsupportedStorageVolumeError
 
 ANDROID_FOLDER_ROOT = "/storage/emulated/0"
 REQUEST_CODE = 42  # arbitrary, just needs to be unique

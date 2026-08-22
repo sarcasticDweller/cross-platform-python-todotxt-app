@@ -7,7 +7,7 @@ from kivy.properties import BooleanProperty, ObjectProperty, StringProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivymd.uix.list import OneLineIconListItem
 
-from datetime_helper import today
+from datetime_helper import today_date
 from tasks import data_to_task, task_to_data
 
 Builder.load_file(str(Path(__file__).with_name("tasks_view.kv")))
@@ -28,7 +28,7 @@ class TaskWidget(OneLineIconListItem):
         old_task = data_to_task(self.task_data)
         self.task_data.is_completed = value
         if value and self.task_data.creation_date:
-            self.task_data.completion_date = today()
+            self.task_data.completion_date = today_date()
 
         self.task_manager.update_task(old_task, data_to_task(self.task_data))
 

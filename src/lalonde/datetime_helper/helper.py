@@ -11,9 +11,11 @@ def str_to_datetime(string: str) -> datetime.date | None:
 def date_to_str(date: datetime.date | datetime.datetime) -> str:
     return date.isoformat() if date else ""
 
-def today() -> datetime.date:
-    return datetime.datetime.now().date() #noqa DTZ005: use local time
-    # the real thing that should be flagged is that the annotation says this returns a date, but its actually a datetime. whether or not that's problematic is beyond me
+def today_date() -> datetime.date:
+    return datetime.datetime.now().date() # noqa DTZ005: use local time
+
+def today_datetime() -> datetime.datetime:
+    return datetime.datetime.now()  # noqa DTZ005: use local time
 
 def get_datetime(
     year: int,
@@ -23,5 +25,4 @@ def get_datetime(
     minute: int,
     second: int
 ) -> datetime.datetime:
-    return datetime.datetime(year, month, day, hour, minute, second)  # noqa: DTZ001
-    # use local time
+    return datetime.datetime(year, month, day, hour, minute, second)  # noqa DTZ001: use local time

@@ -20,7 +20,7 @@ class LalondeApp(MDApp):
     task_manager = ObjectProperty(None)
 
     def build(self):
-        self.settings = Settings(self)
+        self.settings = Settings(Path(self.user_data_dir))
         self.set_app_theme()
 
         manager = ScreenManager()
@@ -37,17 +37,29 @@ class LalondeApp(MDApp):
         self.theme_cls.material_style = self.settings["material_style"]
 
     def on_start(self):
-        if self.settings["user_data_dir"]:
-            self.on_folder_picked(self.settings["user_data_dir"])
+        self.set_up_notifications()
+        if self.settings["todo_dir"]:
+            self.on_folder_picked(self.settings["todo_dir"])
         else:
             self.launch_folder_picker()
+    
+    def set_up_notifications(self):
+        if platform != "android":
+            return
+        
+        from android.permissions import Permission, request_permissions
+
+        from alarms.android_alarm import create_notification_channel
+
+        request_permissions([Permission.POST_NOTIFICATIONS])
+        create_notification_channel()
 
     # --- Folder Selection ----------------------------------------------------
 
     @mainthread
     def on_folder_picked(self, folder_path: Path):
-        if not self.settings["user_data_dir"]:
-            self.settings["user_data_dir"] = str(folder_path)
+        if not self.settings["todo_dir"]:
+            self.settings["todo_dir"] = str(folder_path)
             self.settings.save_settings() # was this really the source of the bugs?
         self.task_manager = TaskManager(
             str(
@@ -78,6 +90,7 @@ class LalondeApp(MDApp):
                 kivy_folder_picker()
             case _ as unsupported_platform:
                 raise NotImplementedError(f"Attempted to launch folder picker on unsupported platform: {unsupported_platform}")
+    
 
 
 if __name__ == "__main__":
