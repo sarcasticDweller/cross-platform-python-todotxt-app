@@ -58,7 +58,7 @@ Not Disturb configs, no restricted permission needed.
 
 | Phase | What it delivers | Status |
 |---|---|---|
-| 0 | `Settings` takes a `Path`; `package.domain` | **done** (domain still `org.test`) |
+| 0 | `Settings` takes a `Path`; `package.domain` | **done** |
 | A | `alarms/scheduler.py`, pure Python selection logic | **done**, 18 tests green |
 | B | Notification posts from Python, app in foreground | **code done, unverified on device** |
 | C | p4a service, started by hand | not started |
@@ -107,11 +107,21 @@ That's what the `_v1` suffix in the channel id exists to escape.
     they disagreed during development, the effect was a dead wake-up *and* a
     broken re-arm chain, not just a stale notification.
 - **`android_alarm.py`** — pyjnius, Android-only, imports crash on desktop by
-  design. `create_notification_channel()` (idempotent, safe every start) and
-  `post_notification(title, text)`. Requires **minapi ≥ 26**:
-  `NotificationChannel` and the two-arg `Notification.Builder` are both API 26.
+  design. Requires **minapi ≥ 26**: `NotificationChannel` and the two-arg
+  `Notification.Builder` are both API 26. Exposes
+  `create_notification_channel()` (idempotent, safe every start),
+  `post_notification(title, text, notification_id)`, `get_app_files_dir()`,
+  `can_schedule_exact_alarms()`, `request_exact_alarm_permission()`,
+  `schedule_alarm(when, payload)`, `cancel_alarm()`.
 - **`__init__.py`** — re-exports the scheduler; guards `android_alarm` behind
   `try/except ModuleNotFoundError`, same pattern as `files/__init__.py`.
+
+**`src/lalonde/alarm_service.py`** sits *outside* the package, alongside
+`main.py`. It isn't a module — nothing imports it; p4a executes it as a script in
+a fresh interpreter. Two entrypoints, two processes, both at the top of
+`source.dir`, with `alarms/` as the library each of them imports. The path is
+named in `buildozer.spec`'s `services =` line and is resolved relative to
+`source.dir`, so moving the file means editing that line too.
 
 ⚠️ That guard protects `import alarms` only. `from alarms.android_alarm import x`
 reaches past the package straight at the submodule and **will** raise on desktop.
@@ -191,12 +201,20 @@ These were checked in `.buildozer/`, not assumed from docs or tutorials.
 
 ## Open items
 
-- **`package.domain` is still `org.test`.** Phase D hardcodes
-  `org.<domain>.lalonde.ServiceAlarm` in Python; phase E puts the same string in
-  Java and in a manifest patch. Pick the real one before it lands in three places.
-- **`main_screen.py:on_test_notification` is missing a `return`** after its
-  `platform != "android"` print, so it falls through to the Android import and
-  crashes on desktop anyway.
+- **The app ID is `io.github.sarcasticdweller.lalonde`** (set 2026-08-22, was the
+  `org.test` placeholder). It appears in `buildozer.spec`, in `SERVICE_CLASS` in
+  `android_alarm.py`, in the phase E Java receiver's `package` line and directory
+  path, and in the manifest patch. Nothing catches a mismatch until `autoclass`
+  throws at runtime. Changing it again means users must uninstall/reinstall.
+- **No prompt for `SCHEDULE_EXACT_ALARM`.** `request_exact_alarm_permission()`
+  exists but nothing calls it, so on a fresh install `schedule_alarm()` returns
+  `False` and no alarm is ever registered, with nothing logged. Confirmed on
+  device: Android 14+ denies this by default for apps targeting 33+, and the test
+  phone (Android 17 / API 37) needed a manual grant via Settings → Apps → Special
+  app access → Alarms & reminders before anything worked.
+- **`sync_next_alarm()` is silent about all three of its outcomes** (no
+  permission / nothing to schedule / scheduled). That silence is what made the
+  above take a device round-trip to diagnose.
 - **ISSUE-028** (`project_tags`/`context_tags` are `StringProperty` but `TaskData`
   types them `list[str]`) lives in the same `EditTaskScreen` methods the alarm
   fields were added to. Editing any task strips its tags — relevant because alarm

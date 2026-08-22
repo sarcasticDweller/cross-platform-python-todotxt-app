@@ -31,6 +31,7 @@ class TaskWidget(OneLineIconListItem):
             self.task_data.completion_date = today_date()
 
         self.task_manager.update_task(old_task, data_to_task(self.task_data))
+        App.get_running_app().sync_next_alarm()
 
     def on_edit(self):
         """Pass self.task_data through to the edit screen to pre-populate fields with it."""

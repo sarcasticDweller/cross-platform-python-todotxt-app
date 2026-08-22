@@ -2,6 +2,7 @@ import copy
 import datetime
 from pathlib import Path
 
+from kivy.app import App
 from kivy.lang import Builder
 from kivy.properties import (
     BooleanProperty,
@@ -180,7 +181,7 @@ class EditTaskScreen(Screen):
                 self._save_in_create_mode()
             case "edit":
                 self._save_in_edit_mode()
-
+        App.get_running_app().sync_next_alarm()
         self.back()
 
     def _save_in_create_mode(self):
@@ -206,6 +207,7 @@ class EditTaskScreen(Screen):
             case "edit":
                 self._delete_in_edit_mode()
 
+        App.get_running_app().sync_next_alarm()
         self.back()
 
     def _delete_in_create_mode(self):

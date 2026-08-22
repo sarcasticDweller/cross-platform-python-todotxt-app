@@ -12,7 +12,7 @@ title = Lalonde
 package.name = lalonde
 
 # (str) Package domain (needed for android/ios packaging)
-package.domain = org.test
+package.domain = io.github.sarcasticdweller
 
 # (str) Source code where the main.py live
 source.dir = src/lalonde
@@ -75,7 +75,7 @@ orientation = portrait
 # fails resource linking. When android.api moves to 34, this needs
 # ":foregroundServiceType=specialUse" AND a <property> subtype element inside <service>,
 # which requires the p4a manifest hook -- see docs/android_alarms.md, phase E.
-services = alarm:./alarms/service.py:foreground
+services = alarm:./alarm_service.py:foreground
 
 #
 # OSX Specific
@@ -114,7 +114,7 @@ fullscreen = 0
 # (list) Permissions
 # (See https://python-for-android.readthedocs.io/en/latest/buildoptions.html for all the supported syntaxes and properties)
 #android.permissions = android.permission.INTERNET, (name=android.permission.WRITE_EXTERNAL_STORAGE;maxSdkVersion=18)
-android.permissions = MANAGE_EXTERNAL_STORAGE, POST_NOTIFICATIONS, FOREGROUND_SERVICE, FOREGROUND_SERVICE_SPECIAL_USE, WAKE_LOCK
+android.permissions = MANAGE_EXTERNAL_STORAGE, POST_NOTIFICATIONS, FOREGROUND_SERVICE, FOREGROUND_SERVICE_SPECIAL_USE, WAKE_LOCK, SCHEDULE_EXACT_ALARM, RECEIVE_BOOT_COMPLETED
 
 # (list) features (adds uses-feature -tags to manifest)
 #android.features = android.hardware.usb.host
@@ -196,7 +196,9 @@ android.accept_sdk_license = True
 
 # (list) List of Java files to add to the android project (can be java or a
 # directory containing the files)
-#android.add_src =
+# Compiles java/ into the APK. Note this does NOT declare anything in the manifest --
+# AlarmBootReceiver still needs a <receiver> entry, which p4a.hook adds.
+android.add_src = java/
 
 # (list) Android AAR archives to add
 #android.add_aars =
@@ -364,7 +366,7 @@ android.allow_backup = True
 #p4a.local_recipes =
 
 # (str) Filename to the hook for p4a
-#p4a.hook =
+p4a.hook = scripts/p4a_hook.py
 
 # (str) Bootstrap to use for android builds
 # Run "buildozer android p4a -- bootstraps" for a list of valid values.

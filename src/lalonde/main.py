@@ -6,6 +6,8 @@ from kivy.properties import ObjectProperty
 from kivy.uix.screenmanager import ScreenManager
 from kivymd.app import MDApp
 
+import datetime_helper as dh
+from alarms import get_next_alarm
 from files import Settings, ensure_file_exists
 from gui import (
     EditTaskScreen,
@@ -43,6 +45,8 @@ class LalondeApp(MDApp):
         else:
             self.launch_folder_picker()
     
+    # --- Notifications -------------------------------------------------------
+
     def set_up_notifications(self):
         if platform != "android":
             return
@@ -54,6 +58,24 @@ class LalondeApp(MDApp):
         request_permissions([Permission.POST_NOTIFICATIONS])
         create_notification_channel()
 
+    def sync_next_alarm(self):
+        if platform != "android":
+            return
+        
+        from alarms.android_alarm import cancel_alarm, schedule_alarm
+
+        next_alarm = get_next_alarm(
+            self.task_manager,
+            dh.today_datetime()
+        )
+        if next_alarm:
+            schedule_alarm(
+                when=next_alarm,
+                payload=dh.date_to_str(next_alarm)
+            )
+        else:
+            cancel_alarm()
+    
     # --- Folder Selection ----------------------------------------------------
 
     @mainthread
@@ -71,6 +93,7 @@ class LalondeApp(MDApp):
         )
         self.root.current = "main_screen"
         self.root.get_screen("main_screen")
+        self.sync_next_alarm()
 
     def launch_folder_picker(self):
         def kivy_folder_picker():
