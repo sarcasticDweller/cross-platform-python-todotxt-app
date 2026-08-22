@@ -1,9 +1,17 @@
 <DateField>:
     size_hint_y: None
     text: f"{root.label_text}: {root.value_text if root.value_text else 'Tap to Set'}"
-    on_release: root.show_date_picker(root.field_name)
+    on_release: root.show_picker(root.field_name)
     IconLeftWidget:
-        icon: "bullseye-arrow"
+        icon: root.icon
+
+<TimeField>:
+    size_hint_y: None
+    text: f"{root.label_text}: {root.value_text if root.value_text else 'Tap to Set'}"
+    on_release: root.show_picker(root.field_name)
+    IconLeftWidget:
+        icon: root.icon
+
 
 <DescriptionField>:
     size_hint_y: None

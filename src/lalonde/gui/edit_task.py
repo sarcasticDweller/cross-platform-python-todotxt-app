@@ -12,24 +12,27 @@ from kivy.properties import (
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.screenmanager import Screen
 from kivymd.uix.list import OneLineAvatarListItem, OneLineIconListItem, OneLineListItem
-from kivymd.uix.pickers import MDDatePicker
+from kivymd.uix.pickers import MDDatePicker, MDTimePicker
 
 import datetime_helper as dh
 from tasks import TaskData, data_to_task
 
 Builder.load_file(str(Path(__file__).with_name("edit_task.kv")))
 
-def safe_string(arg: any) -> str:
+def _safe_string(arg: any) -> str:
     """Returns "" if the arg is not a string, otherwise returns the arg"""
-    if isinstance(arg, str):
-        return arg
-    return ""
+    return arg if isinstance(arg, str) else ""
 
-class DateField(OneLineIconListItem):
+# --- Custom Field Definitions ------------------------------------------------
+
+class _FieldWithPicker(OneLineIconListItem):
     field_name = StringProperty("")  # Used to setattr in EditTaskScreen
     screen = ObjectProperty(None)
     label_text = StringProperty("")  # Display text
     value_text = StringProperty("")  # the date data... yes we're still encoding it as a string until i refactor it
+    picker_class = ObjectProperty(None)
+    picker_sister_func = ObjectProperty(None)
+    icon = StringProperty("")
 
     def on_screen(self, *args) -> None:
         self._connect()
@@ -42,13 +45,24 @@ class DateField(OneLineIconListItem):
             self.screen.bind(**{self.field_name: self.setter("value_text")})
             self.value_text = getattr(self.screen, self.field_name)
 
-    def show_date_picker(self, field_name: str) -> None:
-        # IMHO this should be in DateField somehow
-        picker = MDDatePicker()
+    def show_picker(self, field_name: str) -> None:
+        picker = self.picker_class()
         picker.bind(
-            on_save=lambda instance, value, date_range: self.screen.on_date_picked(field_name, value),
+            on_save=lambda instance, value, *args: self.picker_sister_func(field_name, value),
         )
         picker.open()
+
+class DateField(_FieldWithPicker):
+    def _connect(self) -> None:
+        super()._connect()
+        self.picker_class = MDDatePicker
+        self.picker_sister_func = self.screen.on_date_picked
+
+class TimeField(_FieldWithPicker):
+    def _connect(self) -> None:
+        super()._connect()
+        self.picker_class = MDTimePicker
+        self.picker_sister_func = self.screen.on_time_picked
 
 class DescriptionField(OneLineListItem):
     screen = ObjectProperty(None)
@@ -61,6 +75,8 @@ class DescriptionField(OneLineListItem):
 
     def on_description_changed(self, instance, value):
         self.screen.description = value
+
+# --- Screen ------------------------------------------------------------------
 
 class EditTaskScreen(Screen):
 
@@ -81,6 +97,8 @@ class EditTaskScreen(Screen):
     context_tags = StringProperty("")
     due = StringProperty("")
     rec = StringProperty("")
+    alarm_date = StringProperty("")
+    alarm_time = StringProperty("")
 
     # --- Initialization ------------------------------------------------------
 
@@ -104,8 +122,21 @@ class EditTaskScreen(Screen):
         container.add_widget(DescriptionField(screen=self))
         container.add_widget(DateField(
             screen=self,
+            icon="bullseye-arrow",
             field_name="due",
             label_text="Due Date"
+        ))
+        container.add_widget(DateField(
+            screen=self,
+            icon="bell",
+            field_name="alarm_date",
+            label_text="Alarm Date"
+        ))
+        container.add_widget(TimeField(
+            screen=self,
+            icon="bell",
+            field_name="alarm_time",
+            label_text="Alarm Time"
         ))
 
     def _open_in_edit_mode(self, task_data: TaskData):
@@ -122,8 +153,21 @@ class EditTaskScreen(Screen):
         container.add_widget(DescriptionField(screen=self))
         container.add_widget(DateField(
             screen=self,
+            icon="bullseye-arrow",
             field_name="due",
             label_text="Due Date"
+        ))
+        container.add_widget(DateField(
+            screen=self,
+            icon="bell",
+            field_name="alarm_date",
+            label_text="Alarm Date"
+        ))
+        container.add_widget(TimeField(
+            screen=self,
+            icon="bell",
+            field_name="alarm_time",
+            label_text="Alarm Time"
         ))
 
     # --- Save ----------------------------------------------------------------
@@ -194,53 +238,38 @@ class EditTaskScreen(Screen):
     def on_date_picked(self, field_name: str, value: datetime.date) -> None:
         setattr(self, field_name, dh.date_to_str(value))
 
-    def open_in_mode(self, mode: str, task_data: TaskData | None = None) -> None:
-        self.mode = mode
-        if mode == "create":
-            self._create_mode()
-        elif mode == "edit":
-            self._edit_mode(task_data)
-        else: # this should never fire due to the nature of OptionProperty
-            raise ValueError(f"{type(self).__name__} must recieve mode 'edit' or 'create', got: '{mode}'")
-
-    def _create_mode(self):
-        self.task_data = TaskData(description="")
-        self.manager.current = self.name
-        container = self.ids.edit_task_options_container # antipattern, how are you actually supposed to query props?
-        container.clear_widgets()
-        container.add_widget(DescriptionField(screen=self))
-        container.add_widget(DateField(
-            screen=self,
-            field_name="due",
-            label_text="Due Date"
-        ))
-
-    def _edit_mode(self, task_data: TaskData):
-        self.task_data = task_data
-        self.manager.current = self.name
-
-
-    def on_date_picked(self, field_name: str, value: datetime.date) -> None:
+    def on_time_picked(self, field_name: str, value: datetime.time) -> None:
         setattr(self, field_name, dh.date_to_str(value))
+
 
     def _set_fields(self, task_data: TaskData | None = None) -> None:
         if task_data == None:
             task_data = TaskData(description="")
 
-        self.description = task_data.description # because a description is a requirement for all tasks, it does not need `safe_string()` insurance
+        self.description = task_data.description # because a description is a requirement for all tasks, it does not need `_safe_string()` insurance
         self.is_completed = task_data.is_completed
-        self.priority = safe_string(task_data.priority)
+        self.priority = _safe_string(task_data.priority)
         self.completion_date = dh.date_to_str(task_data.completion_date)
         self.creation_date = dh.date_to_str(task_data.creation_date)
-        self.project_tags = safe_string(task_data.project_tags)
-        self.context_tags = safe_string(task_data.context_tags)
+        self.project_tags = _safe_string(task_data.project_tags)
+        self.context_tags = _safe_string(task_data.context_tags)
         self.due = dh.date_to_str(task_data.due)
-        self.rec = safe_string(task_data.rec)
+        self.rec = _safe_string(task_data.rec)
+        # Alarms are encoded as one thing, but (for now) entered as separate fields. 
+        alarm_date, alarm_time = dh.date_to_str(task_data.alarm).split("T") if task_data.alarm else (None, None)
+        self.alarm_date = _safe_string(alarm_date)
+        self.alarm_time = _safe_string(alarm_time)
 
     def _clear_fields(self):
         self._set_fields()
 
     def _create_task_data_from_fields(self) -> TaskData:
+        alarm = ""
+        if self.alarm_date:
+            alarm = self.alarm_date
+            if self.alarm_time:
+                alarm = f"{alarm}T{self.alarm_time}"
+
         return TaskData(
             description=self.description,
             is_completed=self.is_completed,
@@ -250,5 +279,6 @@ class EditTaskScreen(Screen):
             project_tags=self.project_tags.split(" "),
             context_tags=self.context_tags.split(" "),
             due=dh.str_to_date(self.due),
-            rec=self.rec
+            rec=self.rec,
+            alarm=dh.str_to_datetime(alarm)
         )
